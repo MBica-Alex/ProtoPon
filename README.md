@@ -1,6 +1,6 @@
-# Nu primesc notă pentru că nu am pus titlu și descriere
+# ProtoPon
 
-### Folosiți template-ul corespunzător grupei voastre!
+### Un joc inspirat de seria "Patapon" pentru PSP.
 
 | Laborant  | Link template                                |
 |-----------|----------------------------------------------|
