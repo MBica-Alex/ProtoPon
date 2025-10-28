@@ -1,6 +1,6 @@
 # ProtoPon
 
-### Un joc inspirat de seria "Patapon" pentru PSP.
+ Un joc inspirat de seria "Patapon" pentru PSP. In acest joc, tu controlezi o armata formata din creaturi numite "Patapon" care fiecare poate avea o arma diferita. Armata este controlata printr-o serie de comenzi alcatuite din 4 "lovituri de toba", care dau ordine armatei sa actioneze in diverse moduri: sa se miste in fata, sa atace, sa se apere, etc. Pe terenul de joc exista inamici care vor incerca sa-ti omoare armata, iar tu trebuie sa ii omori pentru a ajunge la finalul nivelului si pentru a castiga jocul.
 
 | Laborant  | Link template                                |
 |-----------|----------------------------------------------|
