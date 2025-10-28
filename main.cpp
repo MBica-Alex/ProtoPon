@@ -2,7 +2,6 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <limits>
 #include <cctype>
 #include <cmath>
 
@@ -34,8 +33,6 @@ public:
     }
     ~Patapon() = default;
     Type getType() const { return m_type; }
-    int getHP() const { return m_hp; }
-    int getMaxHP() const { return m_max_hp; }
     int getATK() const { return m_atk; }
     int getDEF() const { return m_def; }
     std::string getTypeLabel() const {
@@ -83,7 +80,6 @@ public:
     Enemy(std::string name, int hp, int atk, int pos)
         : m_name(std::move(name)), m_hp(hp), m_atk(atk), m_pos(pos) {}
     const std::string& getName() const { return m_name; }
-    int getHP() const { return m_hp; }
     int getATK() const { return m_atk; }
     int getPos() const { return m_pos; }
     void setPos(int p) { m_pos = p; }
@@ -133,7 +129,7 @@ private:
 
 class Army {
 public:
-    Army(const std::vector<Patapon> &soldiers, int position = 0)
+    explicit Army(const std::vector<Patapon> &soldiers, int position = 0)
         : m_position(position) {
         m_soldiers.reserve(soldiers.size());
         for (const auto &s : soldiers) m_soldiers.push_back(new Patapon(s));
@@ -170,7 +166,7 @@ public:
             int dist = e.getPos() - m_position;
             if (dist < 0) continue;
             int dmg = 0;
-            for (const auto &p : m_soldiers) {
+            for (const Patapon* p : m_soldiers) {
                 if (!p->isAlive()) continue;
                 int r = pataponRange(p);
                 if (dist <= r) dmg += p->dealDamage();
@@ -226,12 +222,6 @@ private:
         }
         return 1;
     }
-    int totalDamage() const {
-        int sum = 0;
-        for (const auto p : m_soldiers)
-            if (p->isAlive()) sum += p->dealDamage();
-        return sum;
-    }
     int averageDefense() const {
         int sum = 0, count = 0;
         for (const auto p : m_soldiers) {
@@ -245,7 +235,6 @@ class Game {
 public:
     Game(const Army &army, const std::vector<Enemy> &enemies)
         : m_army(army), m_enemies(enemies), m_won(false), m_lost(false), m_turns(0) {
-        // Goal is always at position 14 (last position on 15-unit map, 0-indexed)
         m_goal = GameConstants::MAP_SIZE - 1;
     }
     void processInput(const std::string &input) {
@@ -399,7 +388,6 @@ int main() {
     std::vector<Patapon> soldiers = { p1, p2, p3 };
     Army army(soldiers, 0);
 
-    // Enemies positioned within the 15-unit map (positions 0-14)
     Enemy e1("Porc", 12, 4, 7);
     Enemy e2("Katapon", 18, 5, 11);
     std::vector<Enemy> enemies = { e1, e2 };
