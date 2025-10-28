@@ -312,11 +312,8 @@ public:
         os << "\n";
         os << "---------------------------\n";
     }
-    void spawnEnemy(const Enemy &e) { m_enemies.push_back(e); }
-    void debugMoveArmy(int steps) { m_army.moveForward(steps); }
     bool hasWon() const { return m_won; }
     bool hasLost() const { return m_lost; }
-    int getGoal() const { return m_goal; }
     friend std::ostream& operator<<(std::ostream &os, const Game &g) {
         g.render(os);
         return os;
@@ -391,26 +388,6 @@ private:
                 }
             }
         }
-    }
-    int leftmostEnemyPos() const {
-        int left = std::numeric_limits<int>::max();
-        bool found = false;
-        for (const auto &e : m_enemies) {
-            if (!e.isAlive()) continue;
-            left = std::min(left, e.getPos());
-            found = true;
-        }
-        return found ? left : 0;
-    }
-    int rightmostEnemyPos() const {
-        int right = std::numeric_limits<int>::min();
-        bool found = false;
-        for (const auto &e : m_enemies) {
-            if (!e.isAlive()) continue;
-            right = std::max(right, e.getPos());
-            found = true;
-        }
-        return found ? right : 0;
     }
 };
 
