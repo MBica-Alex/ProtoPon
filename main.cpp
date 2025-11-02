@@ -32,10 +32,10 @@ public:
         return *this;
     }
     ~Patapon() = default;
-    Type getType() const { return m_type; }
-    int getATK() const { return m_atk; }
-    int getDEF() const { return m_def; }
-    std::string getTypeLabel() const {
+    [[nodiscard]] Type getType() const { return m_type; }
+    [[nodiscard]] int getATK() const { return m_atk; }
+    [[nodiscard]] int getDEF() const { return m_def; }
+    [[nodiscard]] std::string getTypeLabel() const {
         switch (m_type) {
             case Type::SPEAR:  return GameConstants::LABEL_SPEAR;
             case Type::SHIELD: return GameConstants::LABEL_SHIELD;
@@ -43,7 +43,7 @@ public:
         }
         return GameConstants::LABEL_UNKNOWN;
     }
-    bool isAlive() const { return m_hp > 0; }
+    [[nodiscard]] bool isAlive() const { return m_hp > 0; }
     void takeDamage(int dmg) {
         if (dmg < 0) {
             m_hp = std::min(m_max_hp, m_hp - dmg);
@@ -54,7 +54,7 @@ public:
             if (m_hp < 0) m_hp = 0;
         }
     }
-    int dealDamage() const {
+    [[nodiscard]] int dealDamage() const {
         switch (m_type) {
             case Type::BOW: return m_atk + 2;
             case Type::SPEAR: return m_atk;
@@ -79,11 +79,11 @@ class Enemy {
 public:
     Enemy(std::string name, int hp, int atk, int pos)
         : m_name(std::move(name)), m_hp(hp), m_atk(atk), m_pos(pos) {}
-    const std::string& getName() const { return m_name; }
-    int getATK() const { return m_atk; }
-    int getPos() const { return m_pos; }
+    [[nodiscard]] const std::string& getName() const { return m_name; }
+    [[nodiscard]] int getATK() const { return m_atk; }
+    [[nodiscard]] int getPos() const { return m_pos; }
     void setPos(int p) { m_pos = p; }
-    bool isAlive() const { return m_hp > 0; }
+    [[nodiscard]] bool isAlive() const { return m_hp > 0; }
     void takeDamage(int dmg) {
         m_hp -= dmg;
         if (m_hp < 0) m_hp = 0;
@@ -106,10 +106,10 @@ public:
         m_seq.push_back(cmd);
         if (m_seq.size() > m_maxHistory) m_seq.erase(m_seq.begin());
     }
-    bool matchesMove() const { return endsWithPattern({ "pa", "pa", "pa", "po" }); }
-    bool matchesAttack() const { return endsWithPattern({ "po", "po", "pa", "po" }); }
+    [[nodiscard]] bool matchesMove() const { return endsWithPattern({ "pa", "pa", "pa", "po" }); }
+    [[nodiscard]] bool matchesAttack() const { return endsWithPattern({ "po", "po", "pa", "po" }); }
     void clear() { m_seq.clear(); }
-    const std::vector<std::string>& getCommands() const { return m_seq; }
+    [[nodiscard]] const std::vector<std::string>& getCommands() const { return m_seq; }
     friend std::ostream& operator<<(std::ostream &os, const CommandSequence &cs) {
         os << "Comenzi:";
         for (const auto &c : cs.m_seq) os << " " << c;
@@ -118,7 +118,7 @@ public:
 private:
     std::vector<std::string> m_seq;
     static constexpr std::size_t m_maxHistory = 8;
-    bool endsWithPattern(const std::vector<std::string> &pattern) const {
+    [[nodiscard]] bool endsWithPattern(const std::vector<std::string> &pattern) const {
         if (m_seq.size() < pattern.size()) return false;
         size_t n = m_seq.size(), m = pattern.size();
         for (size_t i = 0; i < m; ++i)
@@ -186,7 +186,7 @@ public:
             }
         }
     }
-    void receiveEnemyAttack(int dmg) {
+    void receiveEnemyAttack(int dmg) const {
         for (auto &p : m_soldiers) {
             if (p->isAlive()) {
                 p->takeDamage(dmg);
@@ -194,12 +194,12 @@ public:
             }
         }
     }
-    bool hasLivingSoldiers() const {
+    [[nodiscard]] bool hasLivingSoldiers() const {
         for (const auto p : m_soldiers) if (p->isAlive()) return true;
         return false;
     }
-    int getPosition() const { return m_position; }
-    std::size_t size() const { return m_soldiers.size(); }
+    [[nodiscard]] int getPosition() const { return m_position; }
+    [[nodiscard]] std::size_t size() const { return m_soldiers.size(); }
     friend std::ostream& operator<<(std::ostream &os, const Army &a) {
         os << "Pozitia armatei: " << a.m_position << "\n {";
         bool first = true;
@@ -222,7 +222,7 @@ private:
         }
         return 1;
     }
-    int averageDefense() const {
+    [[nodiscard]] int averageDefense() const {
         int sum = 0, count = 0;
         for (const auto p : m_soldiers) {
             if (p->isAlive()) { sum += p->getDEF(); ++count; }
@@ -290,7 +290,8 @@ public:
                 if (!e.isAlive()) continue;
                 if (e.getPos() == pos) {
                     ++count;
-                    if (count == 1 && !e.getName().empty()) c = std::toupper(static_cast<unsigned char>(e.getName()[0]));
+                    if (count == 1 && !e.getName().empty())
+                        c = static_cast<char>(std::toupper(static_cast<unsigned char>(e.getName()[0])));
                 }
             }
             if (count == 0) os << ".";
@@ -301,8 +302,8 @@ public:
         os << "\n";
         os << "---------------------------\n";
     }
-    bool hasWon() const { return m_won; }
-    bool hasLost() const { return m_lost; }
+    [[nodiscard]] bool hasWon() const { return m_won; }
+    [[nodiscard]] bool hasLost() const { return m_lost; }
     friend std::ostream& operator<<(std::ostream &os, const Game &g) {
         g.render(os);
         return os;
@@ -345,10 +346,9 @@ private:
     }
     void handleAttack() { m_army.attackEnemies(m_enemies); }
     void cleanupDeadEnemies() {
-        m_enemies.erase(std::remove_if(m_enemies.begin(), m_enemies.end(),
-            [](const Enemy &e){ return !e.isAlive(); }), m_enemies.end());
+        std::erase_if(m_enemies, [](const Enemy& e){ return !e.isAlive(); });
     }
-    void enemiesAttack() {
+    void enemiesAttack() const {
         const int enemyAttackRange = 1;
         for (const auto &e : m_enemies) {
             if (!e.isAlive()) continue;
