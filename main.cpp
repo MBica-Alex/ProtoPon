@@ -37,7 +37,6 @@ public:
     [[nodiscard]] int getATK() const { return m_atk; }
     [[nodiscard]] int getDEF() const { return m_def; }
     [[nodiscard]] int getHP() const { return m_hp; }
-    [[nodiscard]] int getMaxHP() const { return m_max_hp; }
     [[nodiscard]] std::string getTypeLabel() const {
         switch (m_type) {
             case Type::SPEAR:  return GameConstants::LABEL_SPEAR;
@@ -218,7 +217,6 @@ public:
         return false;
     }
     [[nodiscard]] int getPosition() const { return m_position; }
-    [[nodiscard]] std::size_t size() const { return m_soldiers.size(); }
     friend std::ostream& operator<<(std::ostream &os, const Army &a) {
         os << "Pozitia armatei: " << a.m_position << "\n {";
         bool first = true;
