@@ -31,10 +31,13 @@ public:
         }
         return *this;
     }
-    ~Patapon() = default;
+    ~Patapon() {}
     [[nodiscard]] Type getType() const { return m_type; }
+    [[nodiscard]] const std::string& getName() const { return m_name; }
     [[nodiscard]] int getATK() const { return m_atk; }
     [[nodiscard]] int getDEF() const { return m_def; }
+    [[nodiscard]] int getHP() const { return m_hp; }
+    [[nodiscard]] int getMaxHP() const { return m_max_hp; }
     [[nodiscard]] std::string getTypeLabel() const {
         switch (m_type) {
             case Type::SPEAR:  return GameConstants::LABEL_SPEAR;
@@ -81,6 +84,7 @@ public:
         : m_name(std::move(name)), m_hp(hp), m_atk(atk), m_pos(pos) {}
     [[nodiscard]] const std::string& getName() const { return m_name; }
     [[nodiscard]] int getATK() const { return m_atk; }
+    [[nodiscard]] int getHP() const { return m_hp; }
     [[nodiscard]] int getPos() const { return m_pos; }
     void setPos(int p) { m_pos = p; }
     [[nodiscard]] bool isAlive() const { return m_hp > 0; }
@@ -101,7 +105,7 @@ private:
 
 class CommandSequence {
 public:
-    CommandSequence() = default;
+    CommandSequence() {}
     void push(const std::string &cmd) {
         m_seq.push_back(cmd);
         if (m_seq.size() > m_maxHistory) m_seq.erase(m_seq.begin());
@@ -158,7 +162,7 @@ public:
         if (!hasLivingSoldiers()) return;
         m_position += steps;
     }
-    void attackEnemies(std::vector<Enemy> &enemies) const {
+    void attackEnemies(std::vector<Enemy> &enemies, std::vector<std::string>& log) const {
         if (!hasLivingSoldiers()) return;
         std::ranges::sort(enemies, [](const Enemy &a, const Enemy &b){ return a.getPos() < b.getPos(); });
         for (auto &e : enemies) {
@@ -172,24 +176,39 @@ public:
                 if (dist <= r) dmg += p->dealDamage();
             }
             if (dmg > 0) {
+                int oldHP = e.getHP();
                 e.takeDamage(dmg);
+                int damageDealt = oldHP - e.getHP();
+                log.push_back("Armata a atacat " + e.getName() + " iar acesta a pierdut " + std::to_string(damageDealt) + " HP!");
+
                 if (e.isAlive()) {
                     int retaliate = std::max(1, e.getATK() - averageDefense());
                     for (auto &p : m_soldiers) {
                         if (p->isAlive()) {
+                            int oldPataponHP = p->getHP();
                             p->takeDamage(retaliate);
+                            int damageTaken = oldPataponHP - p->getHP();
+                            log.push_back(e.getName() + " a contraatacat " + p->getName() + " iar acesta a pierdut " + std::to_string(damageTaken) + " HP!");
                             break;
                         }
                     }
+                } else {
+                    log.push_back(e.getName() + " a fost invins!");
                 }
                 break;
             }
         }
     }
-    void receiveEnemyAttack(int dmg) const {
+    void receiveEnemyAttack(int dmg, const std::string& enemyName, std::vector<std::string>& log) const {
         for (auto &p : m_soldiers) {
             if (p->isAlive()) {
+                int oldHP = p->getHP();
                 p->takeDamage(dmg);
+                int damageTaken = oldHP - p->getHP();
+                log.push_back(enemyName + " a atacat " + p->getName() + " iar acesta a pierdut " + std::to_string(damageTaken) + " HP!");
+                if (!p->isAlive()) {
+                    log.push_back(p->getName() + " a fost invins!");
+                }
                 break;
             }
         }
@@ -245,6 +264,8 @@ public:
     }
     void update() {
         if (m_won || m_lost) return;
+        m_log.clear();
+
         if (m_commands.matchesMove()) {
             handleMove();
             m_commands.clear();
@@ -273,8 +294,17 @@ public:
         os << "\nComenzi:";
         for (const auto &c : m_commands.getCommands()) os << " " << c;
         os << "\n";
-        os << "=== Camp ===\n";
 
+        // Afișează log-ul aici, înainte de camp
+        if (!m_log.empty()) {
+            os << "\n--- Log Batalie ---\n";
+            for (const auto &message : m_log) {
+                os << ">>> " << message << "\n";
+            }
+            os << "------------------\n";
+        }
+
+        os << "\n=== Camp ===\n";
         for (int pos = 0; pos < GameConstants::MAP_SIZE; ++pos) {
             if (pos == m_army.getPosition()) {
                 os << "A";
@@ -312,6 +342,7 @@ private:
     Army m_army;
     std::vector<Enemy> m_enemies;
     CommandSequence m_commands;
+    std::vector<std::string> m_log;
     bool m_won;
     bool m_lost;
     int m_turns;
@@ -338,24 +369,34 @@ private:
         for (int pos = m_army.getPosition() + 1; pos <= target; ++pos) {
             for (const auto &e : m_enemies) {
                 if (!e.isAlive()) continue;
-                if (e.getPos() == pos) return;
+                if (e.getPos() == pos) {
+                    m_log.emplace_back("Miscare blocata de inamic!");
+                    return;
+                }
             }
         }
 
+        if (allEnemiesDead) {
+            m_log.emplace_back("Toti inamicii au fost invinsi! Armata inainteaza mai rapid!");
+        }
+        m_log.emplace_back("Armata a inaintat!");
         m_army.moveForward(moveDistance);
     }
-    void handleAttack() { m_army.attackEnemies(m_enemies); }
+    void handleAttack() {
+        m_log.emplace_back("Armata ataca!");
+        m_army.attackEnemies(m_enemies, m_log);
+    }
     void cleanupDeadEnemies() {
         std::erase_if(m_enemies, [](const Enemy& e){ return !e.isAlive(); });
     }
-    void enemiesAttack() const {
+    void enemiesAttack() {
         const int enemyAttackRange = 1;
         for (const auto &e : m_enemies) {
             if (!e.isAlive()) continue;
             int dist = std::abs(e.getPos() - m_army.getPosition());
             if (dist <= enemyAttackRange) {
                 int dmg = std::max(1, e.getATK());
-                m_army.receiveEnemyAttack(dmg);
+                m_army.receiveEnemyAttack(dmg, e.getName(), m_log);
             }
         }
     }
