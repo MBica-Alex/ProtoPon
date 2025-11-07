@@ -13,6 +13,40 @@ namespace GameConstants {
     constexpr const char* LABEL_UNKNOWN = "Necunoscut";
 }
 
+class GameStats {
+public:
+    GameStats() : damageDealt(0), damageTaken(0), commandsCount(0), stepsTaken(0), turns(0) {}
+
+    void addDamageDealt(int amount) { damageDealt += amount; }
+    void addDamageTaken(int amount) { damageTaken += amount; }
+    void addCommand() { commandsCount++; }
+    void addSteps(int steps) { stepsTaken += steps; }
+    void addTurn() { turns++; }
+
+    [[nodiscard]] int getDamageDealt() const { return damageDealt; }
+    [[nodiscard]] int getDamageTaken() const { return damageTaken; }
+    [[nodiscard]] int getCommandsCount() const { return commandsCount; }
+    [[nodiscard]] int getStepsTaken() const { return stepsTaken; }
+    [[nodiscard]] int getTurns() const { return turns; }
+
+    void printStats(std::ostream &os) const {
+        os << "\n=== STATISTICI NIVEL ===\n";
+        os << "Damage dealt: " << damageDealt << "\n";
+        os << "Damage taken: " << damageTaken << "\n";
+        os << "Numar comenzi: " << commandsCount << "\n";
+        os << "Pasi facuti: " << stepsTaken << "\n";
+        os << "Numar ture: " << turns << "\n";
+        os << "========================\n";
+    }
+
+private:
+    int damageDealt;
+    int damageTaken;
+    int commandsCount;
+    int stepsTaken;
+    int turns;
+};
+
 class Patapon {
 public:
     enum class Type { SPEAR, SHIELD, BOW };
@@ -113,6 +147,7 @@ public:
     [[nodiscard]] bool matchesAttack() const { return endsWithPattern({ "po", "po", "pa", "po" }); }
     void clear() { m_seq.clear(); }
     [[nodiscard]] const std::vector<std::string>& getCommands() const { return m_seq; }
+    [[nodiscard]] size_t getTotalCommands() const { return m_totalCommands; }
     friend std::ostream& operator<<(std::ostream &os, const CommandSequence &cs) {
         os << "Comenzi:";
         for (const auto &c : cs.m_seq) os << " " << c;
@@ -120,6 +155,7 @@ public:
     }
 private:
     std::vector<std::string> m_seq;
+    size_t m_totalCommands = 0;
     static constexpr std::size_t m_maxHistory = 8;
     [[nodiscard]] bool endsWithPattern(const std::vector<std::string> &pattern) const {
         if (m_seq.size() < pattern.size()) return false;
@@ -161,7 +197,7 @@ public:
         if (!hasLivingSoldiers()) return;
         m_position += steps;
     }
-    void attackEnemies(std::vector<Enemy> &enemies, std::vector<std::string>& log) const {
+    void attackEnemies(std::vector<Enemy> &enemies, std::vector<std::string>& log, GameStats& stats) const {
         if (!hasLivingSoldiers()) return;
         std::ranges::sort(enemies, [](const Enemy &a, const Enemy &b){ return a.getPos() < b.getPos(); });
         for (auto &e : enemies) {
@@ -178,6 +214,7 @@ public:
                 int oldHP = e.getHP();
                 e.takeDamage(dmg);
                 int damageDealt = oldHP - e.getHP();
+                stats.addDamageDealt(damageDealt);
                 log.push_back("Armata a atacat " + e.getName() + " iar acesta a pierdut " + std::to_string(damageDealt) + " HP!");
 
                 if (e.isAlive()) {
@@ -187,6 +224,7 @@ public:
                             int oldPataponHP = p->getHP();
                             p->takeDamage(retaliate);
                             int damageTaken = oldPataponHP - p->getHP();
+                            stats.addDamageTaken(damageTaken);
                             log.push_back(e.getName() + " a contraatacat " + p->getName() + " iar acesta a pierdut " + std::to_string(damageTaken) + " HP!");
                             break;
                         }
@@ -198,12 +236,13 @@ public:
             }
         }
     }
-    void receiveEnemyAttack(int dmg, const std::string& enemyName, std::vector<std::string>& log) const {
+    void receiveEnemyAttack(int dmg, const std::string& enemyName, std::vector<std::string>& log, GameStats& stats) const {
         for (auto &p : m_soldiers) {
             if (p->isAlive()) {
                 int oldHP = p->getHP();
                 p->takeDamage(dmg);
                 int damageTaken = oldHP - p->getHP();
+                stats.addDamageTaken(damageTaken);
                 log.push_back(enemyName + " a atacat " + p->getName() + " iar acesta a pierdut " + std::to_string(damageTaken) + " HP!");
                 if (!p->isAlive()) {
                     log.push_back(p->getName() + " a fost invins!");
@@ -258,6 +297,7 @@ public:
         if (m_won || m_lost) return;
         if (input != "pa" && input != "po") return;
         m_commands.push(input);
+        m_stats.addCommand();
         update();
     }
     void update() {
@@ -273,6 +313,7 @@ public:
         }
         cleanupDeadEnemies();
         m_turns++;
+        m_stats.addTurn();
         if (m_turns % 2 == 0) {
             enemiesAttack();
         } else {
@@ -293,7 +334,6 @@ public:
         for (const auto &c : m_commands.getCommands()) os << " " << c;
         os << "\n";
 
-        // Afișează log-ul aici, înainte de camp
         if (!m_log.empty()) {
             os << "\n--- Log Batalie ---\n";
             for (const auto &message : m_log) {
@@ -329,6 +369,10 @@ public:
         }
         os << "\n";
         os << "---------------------------\n";
+
+        if (m_won || m_lost) {
+            m_stats.printStats(os);
+        }
     }
     [[nodiscard]] bool hasWon() const { return m_won; }
     [[nodiscard]] bool hasLost() const { return m_lost; }
@@ -341,6 +385,7 @@ private:
     std::vector<Enemy> m_enemies;
     CommandSequence m_commands;
     std::vector<std::string> m_log;
+    GameStats m_stats;
     bool m_won;
     bool m_lost;
     int m_turns;
@@ -378,11 +423,12 @@ private:
             m_log.emplace_back("Toti inamicii au fost invinsi! Armata inainteaza mai rapid!");
         }
         m_log.emplace_back("Armata a inaintat!");
+        m_stats.addSteps(moveDistance);
         m_army.moveForward(moveDistance);
     }
     void handleAttack() {
         m_log.emplace_back("Armata ataca!");
-        m_army.attackEnemies(m_enemies, m_log);
+        m_army.attackEnemies(m_enemies, m_log, m_stats);
     }
     void cleanupDeadEnemies() {
         std::erase_if(m_enemies, [](const Enemy& e){ return !e.isAlive(); });
@@ -394,7 +440,7 @@ private:
             int dist = std::abs(e.getPos() - m_army.getPosition());
             if (dist <= enemyAttackRange) {
                 int dmg = std::max(1, e.getATK());
-                m_army.receiveEnemyAttack(dmg, e.getName(), m_log);
+                m_army.receiveEnemyAttack(dmg, e.getName(), m_log, m_stats);
             }
         }
     }
