@@ -17,6 +17,10 @@ class GameStats {
 public:
     GameStats() : damageDealt(0), damageTaken(0), commandsCount(0), stepsTaken(0), turns(0) {}
 
+    GameStats(int dealt, int taken, int commands, int steps, int turnsCount)
+        : damageDealt(dealt), damageTaken(taken), commandsCount(commands),
+          stepsTaken(steps), turns(turnsCount) {}
+
     void addDamageDealt(int amount) { damageDealt += amount; }
     void addDamageTaken(int amount) { damageTaken += amount; }
     void addCommand() { commandsCount++; }
@@ -25,8 +29,8 @@ public:
 
     void printStats(std::ostream &os) const {
         os << "\n=== STATISTICI NIVEL ===\n";
-        os << "Damage dealt: " << damageDealt << "\n";
-        os << "Damage taken: " << damageTaken << "\n";
+        os << "Damage dat: " << damageDealt << "\n";
+        os << "Damage luat: " << damageTaken << "\n";
         os << "Numar comenzi: " << commandsCount << "\n";
         os << "Pasi facuti: " << stepsTaken << "\n";
         os << "Numar ture: " << turns << "\n";
@@ -44,10 +48,13 @@ private:
 class Patapon {
 public:
     enum class Type { SPEAR, SHIELD, BOW };
+
     Patapon(Type type, std::string name, int max_hp, int atk, int def)
         : m_type(type), m_name(std::move(name)), m_hp(max_hp), m_max_hp(max_hp), m_atk(atk), m_def(def) {}
+
     Patapon(const Patapon &other)
         : m_type(other.m_type), m_name(other.m_name), m_hp(other.m_hp), m_max_hp(other.m_max_hp), m_atk(other.m_atk), m_def(other.m_def) {}
+
     Patapon& operator=(const Patapon &other) {
         if (this != &other) {
             m_type = other.m_type;
@@ -59,7 +66,9 @@ public:
         }
         return *this;
     }
+
     ~Patapon() {}
+
     [[nodiscard]] Type getType() const { return m_type; }
     [[nodiscard]] const std::string& getName() const { return m_name; }
     [[nodiscard]] int getATK() const { return m_atk; }
@@ -109,6 +118,7 @@ class Enemy {
 public:
     Enemy(std::string name, int hp, int atk, int pos)
         : m_name(std::move(name)), m_hp(hp), m_atk(atk), m_pos(pos) {}
+
     [[nodiscard]] const std::string& getName() const { return m_name; }
     [[nodiscard]] int getATK() const { return m_atk; }
     [[nodiscard]] int getHP() const { return m_hp; }
@@ -133,6 +143,10 @@ private:
 class CommandSequence {
 public:
     CommandSequence() {}
+
+    explicit CommandSequence(const std::vector<std::string>& initialCommands)
+        : m_seq(initialCommands) {}
+
     void push(const std::string &cmd) {
         m_seq.push_back(cmd);
         if (m_seq.size() > m_maxHistory) m_seq.erase(m_seq.begin());
@@ -141,7 +155,6 @@ public:
     [[nodiscard]] bool matchesAttack() const { return endsWithPattern({ "po", "po", "pa", "po" }); }
     void clear() { m_seq.clear(); }
     [[nodiscard]] const std::vector<std::string>& getCommands() const { return m_seq; }
-    [[nodiscard]] size_t getTotalCommands() const { return m_totalCommands; }
     friend std::ostream& operator<<(std::ostream &os, const CommandSequence &cs) {
         os << "Comenzi:";
         for (const auto &c : cs.m_seq) os << " " << c;
@@ -149,7 +162,6 @@ public:
     }
 private:
     std::vector<std::string> m_seq;
-    size_t m_totalCommands = 0;
     static constexpr std::size_t m_maxHistory = 8;
     [[nodiscard]] bool endsWithPattern(const std::vector<std::string> &pattern) const {
         if (m_seq.size() < pattern.size()) return false;
@@ -167,11 +179,13 @@ public:
         m_soldiers.reserve(soldiers.size());
         for (const auto &s : soldiers) m_soldiers.push_back(new Patapon(s));
     }
+
     Army(const Army &other)
         : m_position(other.m_position) {
         m_soldiers.reserve(other.m_soldiers.size());
         for (const auto p : other.m_soldiers) m_soldiers.push_back(new Patapon(*p));
     }
+
     Army& operator=(const Army &other) {
         if (this != &other) {
             for (auto p : m_soldiers) delete p;
@@ -182,15 +196,18 @@ public:
         }
         return *this;
     }
+
     ~Army() {
         for (auto p : m_soldiers) delete p;
         m_soldiers.clear();
     }
+
     void moveForward(int steps = 1) {
         if (steps <= 0) return;
         if (!hasLivingSoldiers()) return;
         m_position += steps;
     }
+
     void attackEnemies(std::vector<Enemy> &enemies, std::vector<std::string>& log, GameStats& stats) const {
         if (!hasLivingSoldiers()) return;
         std::ranges::sort(enemies, [](const Enemy &a, const Enemy &b){ return a.getPos() < b.getPos(); });
@@ -230,6 +247,7 @@ public:
             }
         }
     }
+
     void receiveEnemyAttack(int dmg, const std::string& enemyName, std::vector<std::string>& log, GameStats& stats) const {
         for (auto &p : m_soldiers) {
             if (p->isAlive()) {
@@ -245,11 +263,14 @@ public:
             }
         }
     }
+
     [[nodiscard]] bool hasLivingSoldiers() const {
         for (const auto p : m_soldiers) if (p->isAlive()) return true;
         return false;
     }
+
     [[nodiscard]] int getPosition() const { return m_position; }
+
     friend std::ostream& operator<<(std::ostream &os, const Army &a) {
         os << "Pozitia armatei: " << a.m_position << "\n {";
         bool first = true;
@@ -261,9 +282,11 @@ public:
         os << "}";
         return os;
     }
+
 private:
     std::vector<Patapon*> m_soldiers;
     int m_position;
+
     static int pataponRange(const Patapon* s) {
         switch (s->getType()) {
             case Patapon::Type::SPEAR: return 2;
@@ -272,6 +295,7 @@ private:
         }
         return 1;
     }
+
     [[nodiscard]] int averageDefense() const {
         int sum = 0, count = 0;
         for (const auto p : m_soldiers) {
@@ -287,21 +311,24 @@ public:
         : m_army(army), m_enemies(enemies), m_won(false), m_lost(false), m_turns(0) {
         m_goal = GameConstants::MAP_SIZE - 1;
     }
+
     void processInput(const std::string &input) {
         if (m_won || m_lost) return;
         if (input != "pa" && input != "po") return;
         m_commands.push(input);
-        m_stats.addCommand();
         update();
     }
+
     void update() {
         if (m_won || m_lost) return;
         m_log.clear();
 
         if (m_commands.matchesMove()) {
+            m_stats.addCommand();
             handleMove();
             m_commands.clear();
         } else if (m_commands.matchesAttack()) {
+            m_stats.addCommand();
             handleAttack();
             m_commands.clear();
         }
@@ -320,6 +347,7 @@ public:
             m_won = true;
         }
     }
+
     void render(std::ostream &os) const {
         os << "Inamici:\n";
         for (const auto &e : m_enemies) os << "  " << e << "\n";
@@ -368,12 +396,15 @@ public:
             m_stats.printStats(os);
         }
     }
+
     [[nodiscard]] bool hasWon() const { return m_won; }
     [[nodiscard]] bool hasLost() const { return m_lost; }
+
     friend std::ostream& operator<<(std::ostream &os, const Game &g) {
         g.render(os);
         return os;
     }
+
 private:
     Army m_army;
     std::vector<Enemy> m_enemies;
@@ -420,13 +451,16 @@ private:
         m_stats.addSteps(moveDistance);
         m_army.moveForward(moveDistance);
     }
+
     void handleAttack() {
         m_log.emplace_back("Armata ataca!");
         m_army.attackEnemies(m_enemies, m_log, m_stats);
     }
+
     void cleanupDeadEnemies() {
         std::erase_if(m_enemies, [](const Enemy& e){ return !e.isAlive(); });
     }
+
     void enemiesAttack() {
         const int enemyAttackRange = 1;
         for (const auto &e : m_enemies) {
@@ -438,6 +472,7 @@ private:
             }
         }
     }
+
     void enemiesAdvance() {
         for (auto &e : m_enemies) {
             if (!e.isAlive()) continue;
