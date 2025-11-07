@@ -23,12 +23,6 @@ public:
     void addSteps(int steps) { stepsTaken += steps; }
     void addTurn() { turns++; }
 
-    [[nodiscard]] int getDamageDealt() const { return damageDealt; }
-    [[nodiscard]] int getDamageTaken() const { return damageTaken; }
-    [[nodiscard]] int getCommandsCount() const { return commandsCount; }
-    [[nodiscard]] int getStepsTaken() const { return stepsTaken; }
-    [[nodiscard]] int getTurns() const { return turns; }
-
     void printStats(std::ostream &os) const {
         os << "\n=== STATISTICI NIVEL ===\n";
         os << "Damage dealt: " << damageDealt << "\n";
