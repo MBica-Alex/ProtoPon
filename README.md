@@ -4,10 +4,7 @@
 
  **Font utilizat:**
  https://www.fontspace.com/patapon-font-f19009
-
-**Comenzi implementate:**
-- *Inaintare:* pa pa pa po
-- *Atac:* po po pa po
+ 
 ---
 | Laborant  | Link template                                |
 |-----------|----------------------------------------------|
