@@ -32,7 +32,6 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(sfml)
 
-# Include these AFTER FetchContent to avoid applying sanitizers to SFML
 include(cmake/Options.cmake)
 include(cmake/CompilerFlags.cmake)
 
@@ -44,35 +43,49 @@ include(cmake/CompilerFlags.cmake)
 
 ###############################################################################
 
-# NOTE: update executable name in .github/workflows/cmake.yml:25 when changing name here
-add_executable(${MAIN_EXECUTABLE_NAME}
+# SFML graphical version
+add_executable(protopon
     main.cpp
+    src/Unit.cpp
+    src/GameStats.cpp
+    src/Patapon.cpp
+    src/Enemy.cpp
+    src/Boss.cpp
+    src/CommandSequence.cpp
+    src/Army.cpp
+    src/Game.cpp
+    src/GameException.cpp
+    src/GameConfig.cpp
 )
 
-# NOTE: Add all defined targets (e.g. executables, libraries, etc. )
-# NOTE: RUN_SANITIZERS is optional, if it's not present it will default to true
-set_compiler_flags(RUN_SANITIZERS TRUE TARGET_NAMES ${MAIN_EXECUTABLE_NAME})
-# set_compiler_flags(TARGET_NAMES ${MAIN_EXECUTABLE_NAME} ${FOO} ${BAR})
-# where ${FOO} and ${BAR} represent additional executables or libraries
-# you want to compile with the set compiler flags
+target_include_directories(protopon PRIVATE include)
 
-###############################################################################
+set_compiler_flags(RUN_SANITIZERS TRUE TARGET_NAMES protopon)
 
-target_link_libraries(${MAIN_EXECUTABLE_NAME}
+target_link_libraries(protopon
         sfml-graphics
         sfml-window
         sfml-system
 )
 
+# Copy SFML DLLs to executable directory on Windows
+if(WIN32)
+    add_custom_command(TARGET protopon POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:sfml-graphics>
+            $<TARGET_FILE:sfml-window>
+            $<TARGET_FILE:sfml-system>
+            $<TARGET_FILE_DIR:protopon>
+    )
+endif()
+
 ###############################################################################
 
 # copy binaries to "bin" folder; these are uploaded as artifacts on each release
 # DESTINATION_DIR is set as "bin" in cmake/Options.cmake:6
-install(TARGETS ${MAIN_EXECUTABLE_NAME} DESTINATION ${DESTINATION_DIR})
+install(TARGETS protopon DESTINATION ${DESTINATION_DIR})
 if(APPLE)
     install(FILES launcher.command DESTINATION ${DESTINATION_DIR})
 endif()
 
-copy_files(FILES tastatura.txt COPY_TO_DESTINATION TARGET_NAME ${MAIN_EXECUTABLE_NAME})
-# copy_files(FILES tastatura.txt config.json DIRECTORY images sounds COPY_TO_DESTINATION TARGET_NAME ${MAIN_EXECUTABLE_NAME})
-# copy_files(DIRECTORY images sounds COPY_TO_DESTINATION TARGET_NAME ${MAIN_EXECUTABLE_NAME})
+copy_files(DIRECTORY assets COPY_TO_DESTINATION TARGET_NAME protopon)

@@ -1,530 +1,745 @@
+#include <SFML/Graphics.hpp>
+#include <sstream>
 #include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <cctype>
 #include <cmath>
+#include <map>
+#include <set>
+#include "Game.h"
+#include "Boss.h"
+#include "GameException.h"
+#include "GameConfig.h"
 
-namespace GameConstants {
-    constexpr int MAP_SIZE = 15;
-    constexpr const char* LABEL_SPEAR = "Sulita";
-    constexpr const char* LABEL_SHIELD = "Scut";
-    constexpr const char* LABEL_BOW = "Arc";
-    constexpr const char* LABEL_UNKNOWN = "Necunoscut";
+float easeOutCubic(float t) {
+    return 1.0f - std::pow(1.0f - t, 3.0f);
 }
 
-class GameStats {
+float lerp(float start, float end, float t) {
+    return start + (end - start) * t;
+}
+
+class AnimatedPosition {
 public:
-    GameStats() : damageDealt(0), damageTaken(0), commandsCount(0), stepsTaken(0), turns(0) {}
+    float currentX = 0;
+    float currentY = 0;
+    float targetX = 0;
+    float targetY = 0;
+    float progress = 1.0f;
+    static constexpr float ANIMATION_SPEED = 3.0f;
 
-    GameStats(int dealt, int taken, int commands, int steps, int turnsCount)
-        : damageDealt(dealt), damageTaken(taken), commandsCount(commands),
-          stepsTaken(steps), turns(turnsCount) {}
+    bool isSpawning = false;
+    float spawnTimer = 0.0f;
+    float currentScale = 1.0f;
+    static constexpr float SPAWN_DURATION = 0.6f;
 
-    void addDamageDealt(int amount) { damageDealt += amount; }
-    void addDamageTaken(int amount) { damageTaken += amount; }
-    void addCommand() { commandsCount++; }
-    void addSteps(int steps) { stepsTaken += steps; }
-    void addTurn() { turns++; }
-
-    void printStats(std::ostream &os) const {
-        os << "\n=== STATISTICI NIVEL ===\n";
-        os << "Damage dat: " << damageDealt << "\n";
-        os << "Damage luat: " << damageTaken << "\n";
-        os << "Numar comenzi: " << commandsCount << "\n";
-        os << "Pasi facuti: " << stepsTaken << "\n";
-        os << "Numar ture: " << turns << "\n";
-        os << "========================\n";
-    }
-
-private:
-    int damageDealt;
-    int damageTaken;
-    int commandsCount;
-    int stepsTaken;
-    int turns;
-};
-
-class Patapon {
-public:
-    enum class Type { SPEAR, SHIELD, BOW };
-
-    Patapon(Type type, std::string name, int max_hp, int atk, int def)
-        : m_type(type), m_name(std::move(name)), m_hp(max_hp), m_max_hp(max_hp), m_atk(atk), m_def(def) {}
-
-    Patapon(const Patapon &other)
-        : m_type(other.m_type), m_name(other.m_name), m_hp(other.m_hp), m_max_hp(other.m_max_hp), m_atk(other.m_atk), m_def(other.m_def) {}
-
-    Patapon& operator=(const Patapon &other) {
-        if (this != &other) {
-            m_type = other.m_type;
-            m_name = other.m_name;
-            m_hp = other.m_hp;
-            m_max_hp = other.m_max_hp;
-            m_atk = other.m_atk;
-            m_def = other.m_def;
+    void setTarget(float x, float y) {
+        if (std::abs(targetX - x) > 0.1f || std::abs(targetY - y) > 0.1f) {
+            targetX = x;
+            targetY = y;
+            progress = 0.0f;
         }
-        return *this;
     }
 
-    ~Patapon() {}
-
-    [[nodiscard]] Type getType() const { return m_type; }
-    [[nodiscard]] const std::string& getName() const { return m_name; }
-    [[nodiscard]] int getATK() const { return m_atk; }
-    [[nodiscard]] int getDEF() const { return m_def; }
-    [[nodiscard]] int getHP() const { return m_hp; }
-    [[nodiscard]] std::string getTypeLabel() const {
-        switch (m_type) {
-            case Type::SPEAR:  return GameConstants::LABEL_SPEAR;
-            case Type::SHIELD: return GameConstants::LABEL_SHIELD;
-            case Type::BOW:    return GameConstants::LABEL_BOW;
-        }
-        return GameConstants::LABEL_UNKNOWN;
+    void startSpawn() {
+        isSpawning = true;
+        spawnTimer = 0.0f;
+        currentScale = 0.0f;
     }
-    [[nodiscard]] bool isAlive() const { return m_hp > 0; }
-    void takeDamage(int dmg) {
-        if (dmg < 0) {
-            m_hp = std::min(m_max_hp, m_hp - dmg);
+
+    void update(float dt) {
+        if (progress < 1.0f) {
+            progress += dt * ANIMATION_SPEED;
+            if (progress > 1.0f) progress = 1.0f;
+            float eased = easeOutCubic(progress);
+            currentX = lerp(currentX + (targetX - currentX) * (1.0f - eased), targetX, eased);
+            currentY = lerp(currentY + (targetY - currentY) * (1.0f - eased), targetY, eased);
         } else {
-            int effective = dmg - m_def;
-            if (effective < 1) effective = 1;
-            m_hp -= effective;
-            if (m_hp < 0) m_hp = 0;
+            currentX = targetX;
+            currentY = targetY;
+        }
+
+        if (isSpawning) {
+            spawnTimer += dt;
+            float t = spawnTimer / SPAWN_DURATION;
+            if (t >= 1.0f) {
+                t = 1.0f;
+                isSpawning = false;
+                currentScale = 1.0f;
+            } else {
+                const float c1 = 3.0f; 
+                const float c3 = c1 + 1.0f;
+                currentScale = 1.0f + c3 * std::pow(t - 1.0f, 3.0f) + c1 * std::pow(t - 1.0f, 2.0f);
+            }
         }
     }
-    [[nodiscard]] int dealDamage() const {
-        switch (m_type) {
-            case Type::BOW: return m_atk + 2;
-            case Type::SPEAR: return m_atk;
-            case Type::SHIELD: return std::max(0, m_atk - 1);
-        }
-        return m_atk;
-    }
-    friend std::ostream& operator<<(std::ostream &os, const Patapon &s) {
-        os << "[" << s.getTypeLabel() << " HP:" << s.m_hp << "/" << s.m_max_hp << " ATK:" << s.m_atk << " DEF:" << s.m_def << "]";
-        return os;
-    }
-private:
-    Type m_type;
-    std::string m_name;
-    int m_hp;
-    int m_max_hp;
-    int m_atk;
-    int m_def;
-};
 
-class Enemy {
-public:
-    Enemy(std::string name, int hp, int atk, int pos)
-        : m_name(std::move(name)), m_hp(hp), m_atk(atk), m_pos(pos) {}
-
-    [[nodiscard]] const std::string& getName() const { return m_name; }
-    [[nodiscard]] int getATK() const { return m_atk; }
-    [[nodiscard]] int getHP() const { return m_hp; }
-    [[nodiscard]] int getPos() const { return m_pos; }
-    void setPos(int p) { m_pos = p; }
-    [[nodiscard]] bool isAlive() const { return m_hp > 0; }
-    void takeDamage(int dmg) {
-        m_hp -= dmg;
-        if (m_hp < 0) m_hp = 0;
-    }
-    friend std::ostream& operator<<(std::ostream &os, const Enemy &e) {
-        os << "[E:" << e.m_name << " HP:" << e.m_hp << " ATK:" << e.m_atk << " POS:" << e.m_pos << "]";
-        return os;
-    }
-private:
-    std::string m_name;
-    int m_hp;
-    int m_atk;
-    int m_pos;
-};
-
-class CommandSequence {
-public:
-    CommandSequence() {}
-
-    explicit CommandSequence(const std::vector<std::string>& initialCommands)
-        : m_seq(initialCommands) {}
-
-    void push(const std::string &cmd) {
-        m_seq.push_back(cmd);
-        if (m_seq.size() > m_maxHistory) m_seq.erase(m_seq.begin());
-    }
-    [[nodiscard]] bool matchesMove() const { return endsWithPattern({ "pa", "pa", "pa", "po" }); }
-    [[nodiscard]] bool matchesAttack() const { return endsWithPattern({ "po", "po", "pa", "po" }); }
-    void clear() { m_seq.clear(); }
-    [[nodiscard]] const std::vector<std::string>& getCommands() const { return m_seq; }
-    friend std::ostream& operator<<(std::ostream &os, const CommandSequence &cs) {
-        os << "Comenzi:";
-        for (const auto &c : cs.m_seq) os << " " << c;
-        return os;
-    }
-private:
-    std::vector<std::string> m_seq;
-    static constexpr std::size_t m_maxHistory = 8;
-    [[nodiscard]] bool endsWithPattern(const std::vector<std::string> &pattern) const {
-        if (m_seq.size() < pattern.size()) return false;
-        size_t n = m_seq.size(), m = pattern.size();
-        for (size_t i = 0; i < m; ++i)
-            if (m_seq[n - m + i] != pattern[i]) return false;
-        return true;
+    void snapTo(float x, float y) {
+        currentX = targetX = x;
+        currentY = targetY = y;
+        progress = 1.0f;
     }
 };
 
-class Army {
+class ArrowAnimation {
 public:
-    explicit Army(const std::vector<Patapon> &soldiers, int position = 0)
-        : m_position(position) {
-        m_soldiers.reserve(soldiers.size());
-        for (const auto &s : soldiers) m_soldiers.push_back(new Patapon(s));
+    float startX, startY;
+    float currentX, currentY;
+    float targetX;
+    float timer = 0.0f;
+    bool active = false;
+    const float DURATION = 0.6f; 
+
+    void start(float sX, float sY, float tX) {
+        startX = sX;
+        startY = sY;
+        currentX = sX;
+        currentY = sY;
+        targetX = tX;
+        timer = 0.0f;
+        active = true;
     }
 
-    Army(const Army &other)
-        : m_position(other.m_position) {
-        m_soldiers.reserve(other.m_soldiers.size());
-        for (const auto p : other.m_soldiers) m_soldiers.push_back(new Patapon(*p));
-    }
-
-    Army& operator=(const Army &other) {
-        if (this != &other) {
-            for (auto p : m_soldiers) delete p;
-            m_soldiers.clear();
-            m_position = other.m_position;
-            m_soldiers.reserve(other.m_soldiers.size());
-            for (const auto p : other.m_soldiers) m_soldiers.push_back(new Patapon(*p));
-        }
-        return *this;
-    }
-
-    ~Army() {
-        for (auto p : m_soldiers) delete p;
-        m_soldiers.clear();
-    }
-
-    void moveForward(int steps = 1) {
-        if (steps <= 0) return;
-        if (!hasLivingSoldiers()) return;
-        m_position += steps;
-    }
-
-    void attackEnemies(std::vector<Enemy> &enemies, std::vector<std::string>& log, GameStats& stats) const {
-        if (!hasLivingSoldiers()) return;
-        std::ranges::sort(enemies, [](const Enemy &a, const Enemy &b){ return a.getPos() < b.getPos(); });
-        for (auto &e : enemies) {
-            if (!e.isAlive()) continue;
-            int dist = e.getPos() - m_position;
-            if (dist < 0) continue;
-            int dmg = 0;
-            for (const Patapon* p : m_soldiers) {
-                if (!p->isAlive()) continue;
-                int r = pataponRange(p);
-                if (dist <= r) dmg += p->dealDamage();
-            }
-            if (dmg > 0) {
-                int oldHP = e.getHP();
-                e.takeDamage(dmg);
-                int damageDealt = oldHP - e.getHP();
-                stats.addDamageDealt(damageDealt);
-                log.push_back("Armata a atacat " + e.getName() + " iar acesta a pierdut " + std::to_string(damageDealt) + " HP!");
-
-                if (e.isAlive()) {
-                    int retaliate = std::max(1, e.getATK() - averageDefense());
-                    for (auto &p : m_soldiers) {
-                        if (p->isAlive()) {
-                            int oldPataponHP = p->getHP();
-                            p->takeDamage(retaliate);
-                            int damageTaken = oldPataponHP - p->getHP();
-                            stats.addDamageTaken(damageTaken);
-                            log.push_back(e.getName() + " a contraatacat " + p->getName() + " iar acesta a pierdut " + std::to_string(damageTaken) + " HP!");
-                            break;
-                        }
-                    }
-                } else {
-                    log.push_back(e.getName() + " a fost invins!");
-                }
-                break;
-            }
-        }
-    }
-
-    void receiveEnemyAttack(int dmg, const std::string& enemyName, std::vector<std::string>& log, GameStats& stats) const {
-        for (auto &p : m_soldiers) {
-            if (p->isAlive()) {
-                int oldHP = p->getHP();
-                p->takeDamage(dmg);
-                int damageTaken = oldHP - p->getHP();
-                stats.addDamageTaken(damageTaken);
-                log.push_back(enemyName + " a atacat " + p->getName() + " iar acesta a pierdut " + std::to_string(damageTaken) + " HP!");
-                if (!p->isAlive()) {
-                    log.push_back(p->getName() + " a fost invins!");
-                }
-                break;
-            }
-        }
-    }
-
-    [[nodiscard]] bool hasLivingSoldiers() const {
-        for (const auto p : m_soldiers) if (p->isAlive()) return true;
-        return false;
-    }
-
-    [[nodiscard]] int getPosition() const { return m_position; }
-
-    friend std::ostream& operator<<(std::ostream &os, const Army &a) {
-        os << "Pozitia armatei: " << a.m_position << "\n {";
-        bool first = true;
-        for (const auto p : a.m_soldiers) {
-            if (!first) os << " | ";
-            os << *p;
-            first = false;
-        }
-        os << "}";
-        return os;
-    }
-
-private:
-    std::vector<Patapon*> m_soldiers;
-    int m_position;
-
-    static int pataponRange(const Patapon* s) {
-        switch (s->getType()) {
-            case Patapon::Type::SPEAR: return 2;
-            case Patapon::Type::SHIELD: return 1;
-            case Patapon::Type::BOW: return 3;
-        }
-        return 1;
-    }
-
-    [[nodiscard]] int averageDefense() const {
-        int sum = 0, count = 0;
-        for (const auto p : m_soldiers) {
-            if (p->isAlive()) { sum += p->getDEF(); ++count; }
-        }
-        return count ? (sum / count) : 0;
-    }
-};
-
-class Game {
-public:
-    Game(const Army &army, const std::vector<Enemy> &enemies)
-        : m_army(army), m_enemies(enemies), m_won(false), m_lost(false), m_turns(0) {
-        m_goal = GameConstants::MAP_SIZE - 1;
-    }
-
-    void processInput(const std::string &input) {
-        if (m_won || m_lost) return;
-        if (input != "pa" && input != "po") return;
-        m_commands.push(input);
-        update();
-    }
-
-    void update() {
-        if (m_won || m_lost) return;
-        m_log.clear();
-
-        if (m_commands.matchesMove()) {
-            m_stats.addCommand();
-            handleMove();
-            m_commands.clear();
-        } else if (m_commands.matchesAttack()) {
-            m_stats.addCommand();
-            handleAttack();
-            m_commands.clear();
-        }
-        cleanupDeadEnemies();
-        m_turns++;
-        m_stats.addTurn();
-        if (m_turns % 2 == 0) {
-            enemiesAttack();
-        } else {
-            enemiesAdvance();
-        }
-        cleanupDeadEnemies();
-        if (!m_army.hasLivingSoldiers()) {
-            m_lost = true;
-        } else if (m_army.getPosition() >= m_goal) {
-            m_won = true;
-        }
-    }
-
-    void render(std::ostream &os) const {
-        os << "Inamici:\n";
-        for (const auto &e : m_enemies) os << "  " << e << "\n";
-        os << "\nArmata:\n  " << m_army << "\n";
-        os << "\nComenzi:";
-        for (const auto &c : m_commands.getCommands()) os << " " << c;
-        os << "\n";
-
-        if (!m_log.empty()) {
-            os << "\n--- Log Batalie ---\n";
-            for (const auto &message : m_log) {
-                os << ">>> " << message << "\n";
-            }
-            os << "------------------\n";
+    void update(float dt) {
+        if (!active) return;
+        timer += dt;
+        float t = timer / DURATION;
+        if (t >= 1.0f) {
+            active = false;
+            return;
         }
 
-        os << "\n=== Camp ===\n";
-        for (int pos = 0; pos < GameConstants::MAP_SIZE; ++pos) {
-            if (pos == m_army.getPosition()) {
-                os << "A";
-                continue;
-            }
-            if (pos == m_goal) {
-                os << "G";
-                continue;
-            }
-            int count = 0;
-            char c = 'E';
-            for (const auto &e : m_enemies) {
-                if (!e.isAlive()) continue;
-                if (e.getPos() == pos) {
-                    ++count;
-                    if (count == 1 && !e.getName().empty())
-                        c = static_cast<char>(std::toupper(static_cast<unsigned char>(e.getName()[0])));
-                }
-            }
-            if (count == 0) os << ".";
-            else if (count == 1) os << c;
-            else if (count < 10) os << static_cast<char>('0' + count);
-            else os << "M";
-        }
-        os << "\n";
-        os << "---------------------------\n";
-
-        if (m_won || m_lost) {
-            m_stats.printStats(os);
-        }
-    }
-
-    [[nodiscard]] bool hasWon() const { return m_won; }
-    [[nodiscard]] bool hasLost() const { return m_lost; }
-
-    friend std::ostream& operator<<(std::ostream &os, const Game &g) {
-        g.render(os);
-        return os;
-    }
-
-private:
-    Army m_army;
-    std::vector<Enemy> m_enemies;
-    CommandSequence m_commands;
-    std::vector<std::string> m_log;
-    GameStats m_stats;
-    bool m_won;
-    bool m_lost;
-    int m_turns;
-    int m_goal;
-
-    void handleMove() {
-        bool allEnemiesDead = true;
-        for (const auto &e : m_enemies) {
-            if (e.isAlive()) {
-                allEnemiesDead = false;
-                break;
-            }
-        }
-
-        int moveDistance = allEnemiesDead ? 3 : 1;
-        int target = m_army.getPosition() + moveDistance;
-
-        if (target >= GameConstants::MAP_SIZE) {
-            target = GameConstants::MAP_SIZE - 1;
-            moveDistance = target - m_army.getPosition();
-            if (moveDistance <= 0) return;
-        }
-
-        for (int pos = m_army.getPosition() + 1; pos <= target; ++pos) {
-            for (const auto &e : m_enemies) {
-                if (!e.isAlive()) continue;
-                if (e.getPos() == pos) {
-                    m_log.emplace_back("Miscare blocata de inamic!");
-                    return;
-                }
-            }
-        }
-
-        if (allEnemiesDead) {
-            m_log.emplace_back("Toti inamicii au fost invinsi! Armata inainteaza mai rapid!");
-        }
-        m_log.emplace_back("Armata a inaintat!");
-        m_stats.addSteps(moveDistance);
-        m_army.moveForward(moveDistance);
-    }
-
-    void handleAttack() {
-        m_log.emplace_back("Armata ataca!");
-        m_army.attackEnemies(m_enemies, m_log, m_stats);
-    }
-
-    void cleanupDeadEnemies() {
-        std::erase_if(m_enemies, [](const Enemy& e){ return !e.isAlive(); });
-    }
-
-    void enemiesAttack() {
-        const int enemyAttackRange = 1;
-        for (const auto &e : m_enemies) {
-            if (!e.isAlive()) continue;
-            int dist = std::abs(e.getPos() - m_army.getPosition());
-            if (dist <= enemyAttackRange) {
-                int dmg = std::max(1, e.getATK());
-                m_army.receiveEnemyAttack(dmg, e.getName(), m_log, m_stats);
-            }
-        }
-    }
-
-    void enemiesAdvance() {
-        for (auto &e : m_enemies) {
-            if (!e.isAlive()) continue;
-            int armyPos = m_army.getPosition();
-            if (e.getPos() > armyPos) {
-                int desired = e.getPos() - 1;
-                if (desired <= armyPos) continue;
-                if (desired >= 0 && desired < GameConstants::MAP_SIZE) {
-                    e.setPos(desired);
-                }
-            } else if (e.getPos() < armyPos) {
-                int desired = e.getPos() + 1;
-                if (desired >= armyPos) continue;
-                if (desired >= 0 && desired < GameConstants::MAP_SIZE) {
-                    e.setPos(desired);
-                }
-            }
-        }
+        float ease = t * t * t; 
+        currentX = startX + (targetX - startX) * ease;
     }
 };
 
 int main() {
-    using Type = Patapon::Type;
-    Patapon p1(Type::SPEAR,  "Sulita",  20, 6, 1);
-    Patapon p2(Type::SHIELD, "Scut",  25, 4, 3);
-    Patapon p3(Type::BOW,    "Arc", 15, 5, 0);
-    std::vector<Patapon> soldiers = { p1, p2, p3 };
-    Army army(soldiers, 0);
+    try {
+        const float WINDOW_WIDTH = 1200.0f;
+        const float WINDOW_HEIGHT = 800.0f;
+        const float BATTLEFIELD_HEIGHT = WINDOW_HEIGHT * 0.75f;
+        const float COMMAND_BAR_HEIGHT = WINDOW_HEIGHT * 0.25f;
 
-    Enemy e1("Porc", 12, 4, 7);
-    Enemy e2("Katapon", 18, 5, 11);
-    std::vector<Enemy> enemies = { e1, e2 };
+        sf::RenderWindow window(sf::VideoMode(static_cast<unsigned>(WINDOW_WIDTH), static_cast<unsigned>(WINDOW_HEIGHT)), "PROTOPON");
+        window.setFramerateLimit(60);
 
-    Game game(army, enemies);
-    std::cout << game;
-    std::cout << "Tastati 'pa' sau 'po'. 'q' pentru iesire.\n";
-    std::cout << "Exemplu: pa pa pa po  (miscare)\n";
-    std::cout << "         po po pa po  (atac)\n\n";
-    std::string token;
-    while (std::cin >> token) {
-        if (token == "q") break;
-        game.processInput(token);
-        std::cout << game;
-        if (game.hasWon()) {
-            std::cout << "Ai castigat! Ai ajuns la obiectiv.\n";
-            break;
+        sf::Image icon;
+        if (icon.loadFromFile("assets/icon.png")) {
+            window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
         }
-        if (game.hasLost()) {
-            std::cout << "Ai pierdut. Toti Pataponii au murit.\n";
-            break;
+
+        sf::Font font;
+        if (!font.loadFromFile("assets/pata_font.ttf")) {
+            if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
+                throw ResourceLoadException("Failed to load font: assets/pata_font.ttf or C:/Windows/Fonts/arial.ttf");
+            }
         }
+
+        sf::Texture pataTexture;
+        if (!pataTexture.loadFromFile("assets/pata.png")) {
+            throw ResourceLoadException("Failed to load texture: assets/pata.png");
+        }
+        sf::Sprite pataSprite(pataTexture);
+        pataSprite.setOrigin(pataTexture.getSize().x / 2.0f, pataTexture.getSize().y / 2.0f);
+        pataSprite.setPosition(80, BATTLEFIELD_HEIGHT / 2);
+        float pataAnimTimer = 0.0f;
+        bool pataAnimActive = false;
+        const float DRUM_ANIM_DURATION = 0.5f;
+
+        sf::Texture ponTexture;
+        if (!ponTexture.loadFromFile("assets/pon.png")) {
+            throw ResourceLoadException("Failed to load texture: assets/pon.png");
+        }
+        sf::Sprite ponSprite(ponTexture);
+        ponSprite.setOrigin(ponTexture.getSize().x / 2.0f, ponTexture.getSize().y / 2.0f);
+        ponSprite.setPosition(WINDOW_WIDTH - 80, BATTLEFIELD_HEIGHT / 2);
+        float ponAnimTimer = 0.0f;
+        bool ponAnimActive = false;
+
+        sf::Texture yariponTexture, tateponTexture, yumiponTexture;
+        if (!yariponTexture.loadFromFile("assets/yaripon.png")) {
+            throw ResourceLoadException("Failed to load texture: assets/yaripon.png");
+        }
+        if (!tateponTexture.loadFromFile("assets/tatepon.png")) {
+            throw ResourceLoadException("Failed to load texture: assets/tatepon.png");
+        }
+        if (!yumiponTexture.loadFromFile("assets/yumipon.png")) {
+            throw ResourceLoadException("Failed to load texture: assets/yumipon.png");
+        }
+        if (!yumiponTexture.loadFromFile("assets/yumipon.png")) {
+            throw ResourceLoadException("Failed to load texture: assets/yumipon.png");
+        }
+        std::vector<sf::Texture*> pataponIcons = {&tateponTexture, &yariponTexture, &yumiponTexture};
+
+        sf::Texture arrowTexture;
+        if(!arrowTexture.loadFromFile("assets/arrow.png")) {
+             throw ResourceLoadException("Failed to load texture: assets/arrow.png");
+        }
+        sf::Sprite arrowSprite(arrowTexture);
+        arrowSprite.setOrigin(arrowTexture.getSize().x / 2.0f, arrowTexture.getSize().y / 2.0f);
+        
+        ArrowAnimation arrowAnim;
+
+        std::vector<Patapon> soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
+        Army army(soldiers, 0);
+
+        std::vector<std::unique_ptr<Enemy>> initialEnemies;
+        Game game(army, std::move(initialEnemies));
+
+        const float fieldLeft = 50.0f;
+        const float fieldRight = WINDOW_WIDTH - 50.0f;
+        const float fieldWidth = fieldRight - fieldLeft;
+        const float unitRadius = 35.0f;
+        const float fieldY = BATTLEFIELD_HEIGHT - unitRadius + 10;
+
+        auto posToX = [&](int pos) {
+            return fieldLeft + (static_cast<float>(pos) / (GameConstants::MAP_SIZE - 1)) * fieldWidth;
+        };
+
+        AnimatedPosition armyPos;
+        armyPos.snapTo(posToX(game.getArmy().getPosition()), fieldY);
+
+        std::map<const Enemy*, AnimatedPosition> enemyPositions;
+        for (const auto& e : game.getEnemies()) {
+            AnimatedPosition pos;
+            pos.snapTo(posToX(e->getPos()), fieldY);
+            enemyPositions[e.get()] = pos;
+        }
+
+        sf::Clock clock;
+
+
+        
+        float victoryTimer = 0.0f;
+
+        while (window.isOpen()) {
+            float dt = clock.restart().asSeconds();
+
+            sf::Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == sf::Event::Closed) {
+                    window.close();
+                }
+                
+                if (event.type == sf::Event::KeyPressed) {
+                    if (!game.isBossEventActive() && !game.isVictoryMarching()) {
+                        if (event.key.code == sf::Keyboard::A) {
+                            game.processInput("pa");
+                            pataAnimActive = true;
+                            pataAnimTimer = 0.0f;
+                        } else if (event.key.code == sf::Keyboard::D) {
+                            game.processInput("po");
+                            ponAnimActive = true;
+                            ponAnimTimer = 0.0f;
+                        }
+                    } 
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        window.close();
+                    }
+                }
+            }
+
+            if (game.isVictoryMarching()) {
+                 victoryTimer += dt;
+                 
+                 if (victoryTimer < 1.0f) {
+                     armyPos.setTarget(posToX(game.getGoal()), fieldY);
+                     armyPos.update(dt);
+                 } 
+                 else if (victoryTimer < 3.0f) {
+                     float marchProgress = (victoryTimer - 1.0f) / 2.0f;
+                     float startX = posToX(game.getGoal());
+                     float endX = startX + 150.0f;
+                     
+                     float currentMarchX = startX + (endX - startX) * marchProgress;
+                     
+                     armyPos.setTarget(currentMarchX, fieldY);
+                     armyPos.update(dt * 0.5f);
+                 }
+                 else {
+                     game.finishVictoryMarch();
+                 }
+            } else {
+                armyPos.setTarget(posToX(game.getArmy().getPosition()), fieldY);
+                armyPos.update(dt);
+            }
+
+            for (const auto& e : game.getEnemies()) {
+                if (enemyPositions.find(e.get()) == enemyPositions.end()) {
+                    AnimatedPosition pos;
+                    pos.snapTo(posToX(e->getPos()), fieldY);
+                    pos.startSpawn();
+                    enemyPositions[e.get()] = pos;
+                }
+                enemyPositions[e.get()].setTarget(posToX(e->getPos()), fieldY);
+                enemyPositions[e.get()].update(dt);
+            }
+
+            if (pataAnimActive) {
+                pataAnimTimer += dt;
+                if (pataAnimTimer >= DRUM_ANIM_DURATION) {
+                    pataAnimActive = false;
+                }
+            }
+
+            if (game.pollAttackTriggered()) {
+                 float sX = armyPos.currentX;
+                 float sY = armyPos.currentY; 
+                 float tileWidth = fieldWidth / (GameConstants::MAP_SIZE - 1);
+                 float tX = sX + 3.0f * tileWidth;
+                 arrowAnim.start(sX, sY, tX);
+            }
+            arrowAnim.update(dt);
+
+            if (ponAnimActive) {
+                ponAnimTimer += dt;
+                if (ponAnimTimer >= DRUM_ANIM_DURATION) {
+                    ponAnimActive = false;
+                }
+            }
+            
+            game.pollAttackTriggered(); 
+
+            window.clear(sf::Color(20, 20, 40));
+
+            sf::RectangleShape sky(sf::Vector2f(WINDOW_WIDTH, BATTLEFIELD_HEIGHT));
+            sky.setPosition(0, 0);
+            sky.setFillColor(sf::Color(100, 150, 220));
+            window.draw(sky);
+
+            const float hpCircleRadius = 30.0f;
+            const float hpBarWidth = 50.0f;
+            const float hpBarHeight = 8.0f;
+            float hpStartY = 15.0f;
+            float hpSpacing = 70.0f;
+            
+            const auto& currentSoldiers = game.getArmy().getSoldiers();
+            std::vector<size_t> displayOrder = {2, 1, 0};
+            
+            for (size_t displayIdx = 0; displayIdx < 3 && displayIdx < currentSoldiers.size(); ++displayIdx) {
+                size_t i = displayOrder[displayIdx];
+                if (i >= currentSoldiers.size()) continue;
+                
+                float xPos = 50.0f + displayIdx * hpSpacing;
+                float yPos = hpStartY + hpCircleRadius;
+
+                sf::CircleShape circle(hpCircleRadius);
+                circle.setOrigin(hpCircleRadius, hpCircleRadius);
+                circle.setPosition(xPos, yPos);
+                circle.setFillColor(sf::Color(255, 255, 255, 100));
+                circle.setOutlineColor(sf::Color::White);
+                circle.setOutlineThickness(2);
+                window.draw(circle);
+
+                sf::Sprite iconSprite(*pataponIcons[i]);
+                float iconScale = (hpCircleRadius * 1.6f) / static_cast<float>(pataponIcons[i]->getSize().x);
+                iconSprite.setScale(iconScale, iconScale);
+                iconSprite.setOrigin(pataponIcons[i]->getSize().x / 2.0f, pataponIcons[i]->getSize().y / 2.0f);
+                iconSprite.setPosition(xPos, yPos);
+                window.draw(iconSprite);
+
+                float barX = xPos - hpBarWidth / 2;
+                float barY = yPos + hpCircleRadius + 5;
+
+                sf::RectangleShape hpBack(sf::Vector2f(hpBarWidth, hpBarHeight));
+                hpBack.setPosition(barX, barY);
+                hpBack.setFillColor(sf::Color::Black);
+                window.draw(hpBack);
+
+                float hpPercent = static_cast<float>(currentSoldiers[i]->getHP()) / static_cast<float>(currentSoldiers[i]->getMaxHP());
+                hpPercent = std::clamp(hpPercent, 0.0f, 1.0f);
+
+                sf::Uint8 r = static_cast<sf::Uint8>((1.0f - hpPercent) * 255);
+                sf::Uint8 g = static_cast<sf::Uint8>(hpPercent * 255);
+                sf::Color hpColor(r, g, 0);
+
+                sf::RectangleShape hpBar(sf::Vector2f(hpBarWidth * hpPercent, hpBarHeight));
+                hpBar.setPosition(barX, barY);
+                hpBar.setFillColor(hpColor);
+                window.draw(hpBar);
+            }
+
+            float goalX = posToX(game.getGoal());
+            
+            sf::Color totemColor = sf::Color::Black;
+            sf::Color accentColor = (game.hasWon() || game.isVictoryMarching()) ? sf::Color::Green : sf::Color::Red;
+            
+            float groundY = BATTLEFIELD_HEIGHT;
+
+            sf::ConvexShape base;
+            base.setPointCount(4);
+            base.setPoint(0, sf::Vector2f(goalX - 30, groundY));
+            base.setPoint(1, sf::Vector2f(goalX + 30, groundY));
+            base.setPoint(2, sf::Vector2f(goalX + 20, groundY - 30));
+            base.setPoint(3, sf::Vector2f(goalX - 20, groundY - 30));
+            base.setFillColor(totemColor);
+            window.draw(base);
+
+            sf::RectangleShape lowerBody(sf::Vector2f(40, 50));
+            lowerBody.setOrigin(20, 50);
+            lowerBody.setPosition(goalX, groundY - 30);
+            lowerBody.setFillColor(totemColor);
+            window.draw(lowerBody);
+
+            sf::RectangleShape midRing(sf::Vector2f(60, 15));
+            midRing.setOrigin(30, 7.5f);
+            midRing.setPosition(goalX, groundY - 80);
+            midRing.setFillColor(totemColor);
+            window.draw(midRing);
+
+            sf::RectangleShape upperBody(sf::Vector2f(30, 40));
+            upperBody.setOrigin(15, 40);
+            upperBody.setPosition(goalX, groundY - 87.5f);
+            upperBody.setFillColor(totemColor);
+            window.draw(upperBody);
+
+            sf::ConvexShape topCap;
+            topCap.setPointCount(4);
+            topCap.setPoint(0, sf::Vector2f(goalX - 25, groundY - 127.5f));
+            topCap.setPoint(1, sf::Vector2f(goalX + 25, groundY - 127.5f));
+            topCap.setPoint(2, sf::Vector2f(goalX + 35, groundY - 142.5f));
+            topCap.setPoint(3, sf::Vector2f(goalX - 35, groundY - 142.5f));
+            topCap.setFillColor(totemColor);
+            window.draw(topCap);
+
+            sf::RectangleShape antenna(sf::Vector2f(4, 30));
+            antenna.setOrigin(2, 30);
+            antenna.setPosition(goalX, groundY - 142.5f);
+            antenna.setFillColor(totemColor);
+            window.draw(antenna);
+
+            sf::CircleShape orb(8);
+            orb.setOrigin(8, 8);
+            orb.setPosition(goalX, groundY - 172.5f);
+            orb.setFillColor(totemColor);
+            window.draw(orb);
+
+            sf::CircleShape eye(6);
+            eye.setOrigin(6, 6);
+            eye.setPosition(goalX, groundY - 55);
+            eye.setFillColor(accentColor);
+            window.draw(eye);
+
+            sf::CircleShape topEye(4);
+            topEye.setOrigin(4, 4);
+            topEye.setPosition(goalX, groundY - 105);
+            topEye.setFillColor(accentColor);
+            window.draw(topEye);
+
+            sf::RectangleShape baseLine(sf::Vector2f(40, 4));
+            baseLine.setOrigin(20, 2);
+            baseLine.setPosition(goalX, groundY - 10);
+            baseLine.setFillColor(accentColor);
+            window.draw(baseLine);
+
+            std::map<int, int> enemiesAtPos;
+            for (const auto& e : game.getEnemies()) {
+                if (e->isAlive()) {
+                    enemiesAtPos[e->getPos()]++;
+                }
+            }
+            std::set<int> drawnEnemyLabels;
+
+            for (const auto& e : game.getEnemies()) {
+                if (!e->isAlive()) continue;
+                AnimatedPosition& pos = enemyPositions[e.get()];
+                
+                sf::CircleShape circle;
+                if (dynamic_cast<Boss*>(e.get())) {
+                    float r = unitRadius * 1.5f;
+                    circle.setRadius(r);
+                    circle.setOrigin(r, r);
+                    circle.setScale(pos.currentScale, pos.currentScale);
+                    circle.setFillColor(sf::Color::Black);
+                    circle.setOutlineColor(sf::Color::Red);
+                } else {
+                    float r = unitRadius;
+                    circle.setRadius(r);
+                    circle.setOrigin(r, r);
+                    circle.setScale(pos.currentScale, pos.currentScale);
+                    circle.setFillColor(sf::Color(255, 80, 80));
+                    circle.setOutlineColor(sf::Color(150, 30, 30));
+                }
+                circle.setPosition(pos.currentX, pos.currentY);
+
+                if (dynamic_cast<Boss*>(e.get())) {
+                    circle.setOutlineThickness(4);
+                } else {
+                    circle.setOutlineThickness(3);
+                }
+                window.draw(circle);
+
+                bool isBoss = (dynamic_cast<Boss*>(e.get()) != nullptr);
+                sf::Text typeLabel(isBoss ? "Z" : "E", font, 24);
+                typeLabel.setOrigin(typeLabel.getLocalBounds().width / 2, typeLabel.getLocalBounds().height / 2 + 5);
+                typeLabel.setPosition(pos.currentX, pos.currentY);
+                if (isBoss) {
+                     typeLabel.setFillColor(sf::Color::Red);
+                } else {
+                     typeLabel.setFillColor(sf::Color::White);
+                }
+                window.draw(typeLabel);
+
+                if (drawnEnemyLabels.find(e->getPos()) == drawnEnemyLabels.end()) {
+                    int count = enemiesAtPos[e->getPos()];
+                    
+                    if (count > 1) {
+                        sf::Text countLabel(std::to_string(count), font, 24);
+                        countLabel.setOrigin(countLabel.getLocalBounds().width / 2, countLabel.getLocalBounds().height / 2);
+                        countLabel.setPosition(pos.currentX, pos.currentY - unitRadius - 30.0f); 
+                        countLabel.setFillColor(sf::Color::White);
+                        window.draw(countLabel);
+                    }
+                    
+                    drawnEnemyLabels.insert(e->getPos());
+                }
+            }
+
+            sf::CircleShape armyCircle(unitRadius);
+            armyCircle.setOrigin(unitRadius, unitRadius);
+            armyCircle.setPosition(armyPos.currentX, armyPos.currentY);
+            armyCircle.setFillColor(sf::Color(80, 150, 255));
+            armyCircle.setOutlineColor(sf::Color(40, 80, 180));
+            armyCircle.setOutlineThickness(4);
+            window.draw(armyCircle);
+
+            sf::Text armyTypeLabel("A", font, 24);
+            armyTypeLabel.setOrigin(armyTypeLabel.getLocalBounds().width / 2, armyTypeLabel.getLocalBounds().height / 2 + 5);
+            armyTypeLabel.setPosition(armyPos.currentX, armyPos.currentY);
+            armyTypeLabel.setFillColor(sf::Color::White);
+            window.draw(armyTypeLabel);
+
+            int livingSoldiers = 0;
+            for(const auto& s : game.getArmy().getSoldiers()) {
+                if(s->isAlive()) livingSoldiers++;
+            }
+
+            sf::Text armyCountLabel(std::to_string(livingSoldiers), font, 24);
+            armyCountLabel.setOrigin(armyCountLabel.getLocalBounds().width / 2, armyCountLabel.getLocalBounds().height / 2);
+            armyCountLabel.setPosition(armyPos.currentX, armyPos.currentY - unitRadius - 30.0f);
+            armyCountLabel.setFillColor(sf::Color::White);
+            window.draw(armyCountLabel);
+
+            if (pataAnimActive) {
+                float t = pataAnimTimer / DRUM_ANIM_DURATION;
+                float alpha = t < 0.3f ? (t / 0.3f) : ((1.0f - t) / 0.7f);
+                alpha = std::clamp(alpha, 0.0f, 1.0f);
+                float rotation = -15.0f + (t * 30.0f);
+                float scale = 0.8f + (t * 0.2f);
+
+                pataSprite.setRotation(rotation);
+                pataSprite.setScale(scale, scale);
+                pataSprite.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(alpha * 255)));
+                window.draw(pataSprite);
+            }
+
+            if (ponAnimActive) {
+                float t = ponAnimTimer / DRUM_ANIM_DURATION;
+                float alpha = t < 0.3f ? (t / 0.3f) : ((1.0f - t) / 0.7f);
+                alpha = std::clamp(alpha, 0.0f, 1.0f);
+                float rotation = 15.0f - (t * 30.0f);
+                float scale = 0.8f + (t * 0.2f);
+
+                ponSprite.setRotation(rotation);
+                ponSprite.setScale(scale, scale);
+                ponSprite.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(alpha * 255)));
+                window.draw(ponSprite);
+            }
+
+            if (arrowAnim.active) {
+                arrowSprite.setPosition(arrowAnim.currentX, arrowAnim.currentY);
+                arrowSprite.setScale(0.25f, 0.25f); 
+                window.draw(arrowSprite);
+            }
+
+            sf::RectangleShape commandBar(sf::Vector2f(WINDOW_WIDTH, COMMAND_BAR_HEIGHT));
+            commandBar.setPosition(0, BATTLEFIELD_HEIGHT);
+            commandBar.setFillColor(sf::Color::Black);
+            window.draw(commandBar);
+
+            sf::RectangleShape separator(sf::Vector2f(WINDOW_WIDTH, 3));
+            separator.setPosition(0, BATTLEFIELD_HEIGHT);
+            separator.setFillColor(sf::Color(100, 100, 100));
+            window.draw(separator);
+
+            sf::Text moveCmd("Inaintare: PATA PATA PATA PON", font, 22);
+            moveCmd.setPosition(50, BATTLEFIELD_HEIGHT + 30);
+            moveCmd.setFillColor(sf::Color::Cyan);
+            window.draw(moveCmd);
+
+            sf::Text attackCmd("Atac: PON PON PATA PON", font, 22);
+            attackCmd.setPosition(50, BATTLEFIELD_HEIGHT + 65);
+            attackCmd.setFillColor(sf::Color::Red);
+            window.draw(attackCmd);
+
+            sf::Text controlsLabel("Controale: A = PATA | D = PON | ESC = Iesire", font, 18);
+            controlsLabel.setPosition(50, BATTLEFIELD_HEIGHT + 110);
+            controlsLabel.setFillColor(sf::Color(150, 150, 150));
+            window.draw(controlsLabel);
+
+            std::stringstream cmdStream;
+            cmdStream << "Secventa curenta: ";
+            for (const auto& cmd : game.getCommands().getCommands()) {
+                if (cmd == "pa") cmdStream << "PATA ";
+                else if (cmd == "po") cmdStream << "PON ";
+            }
+            
+            sf::Text currentSeq(cmdStream.str(), font, 20);
+            currentSeq.setPosition(500, BATTLEFIELD_HEIGHT + 30);
+            currentSeq.setFillColor(sf::Color::Yellow);
+            window.draw(currentSeq);
+
+            if (!game.getLog().empty()) {
+                sf::Text lastLog(">>> " + game.getLog().back(), font, 16);
+                lastLog.setPosition(500, BATTLEFIELD_HEIGHT + 100);
+                lastLog.setFillColor(sf::Color(200, 255, 200));
+                window.draw(lastLog);
+            }
+
+            static float bossEventTimer = 0.0f;
+            if (game.isBossEventActive()) {
+                 bossEventTimer += dt;
+                 float fadeDuration = 2.0f;
+                 float alpha = 0.0f;
+                 
+                 if (bossEventTimer < fadeDuration / 2.0f) {
+                     alpha = bossEventTimer / (fadeDuration / 2.0f);
+                 } else if (bossEventTimer < fadeDuration) {
+                     alpha = (fadeDuration - bossEventTimer) / (fadeDuration / 2.0f);
+                 } else {
+                     game.triggerBossSpawn();
+                     bossEventTimer = 0.0f;
+                 }
+                 
+                 if (alpha > 0) {
+                     sf::Text bossText("BOSSFIGHT", font, 100);
+                     bossText.setOrigin(bossText.getLocalBounds().width / 2, bossText.getLocalBounds().height / 2);
+                     bossText.setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+                     bossText.setFillColor(sf::Color(255, 0, 0, static_cast<sf::Uint8>(alpha * 255)));
+                     window.draw(bossText);
+                 }
+            }
+
+            if (game.hasWon()) {
+                static bool spaceKeyProcessed = false;
+                static bool showStats = false;
+                
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+                    if (!spaceKeyProcessed) {
+                        showStats = !showStats;
+                        spaceKeyProcessed = true;
+                    }
+                } else {
+                    spaceKeyProcessed = false;
+                }
+
+                if (showStats) {
+                    sf::RectangleShape overlay(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT));
+                    overlay.setFillColor(sf::Color::Black);
+                    window.draw(overlay);
+
+                    sf::Text title("STATISTICI", font, 60);
+                    title.setOrigin(title.getLocalBounds().width / 2, title.getLocalBounds().height / 2);
+                    title.setPosition(WINDOW_WIDTH / 2, 100);
+                    title.setFillColor(sf::Color::White);
+                    window.draw(title);
+
+                    const auto& stats = game.getStats();
+                    std::stringstream ss;
+                    ss << "Damage Dat: " << stats.getDamageDealt() << "\n"
+                       << "Damage Primit: " << stats.getDamageTaken() << "\n"
+                       << "Comenzi: " << stats.getCommandsCount() << "\n"
+                       << "Pasi: " << stats.getStepsTaken() << "\n"
+                       << "Ture: " << stats.getTurns();
+                    
+                    sf::Text statsText(ss.str(), font, 30);
+                    statsText.setOrigin(statsText.getLocalBounds().width / 2, statsText.getLocalBounds().height / 2);
+                    statsText.setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+                    statsText.setFillColor(sf::Color::White);
+                    window.draw(statsText);
+
+                    sf::Text backText("SPACE: Back", font, 24);
+                    backText.setOrigin(backText.getLocalBounds().width / 2, backText.getLocalBounds().height / 2);
+                    backText.setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 50);
+                    backText.setFillColor(sf::Color(150, 150, 150));
+                    window.draw(backText);
+
+                } else {
+                    sf::RectangleShape overlay(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT));
+                    overlay.setFillColor(sf::Color::Black);
+                    window.draw(overlay);
+
+                    sf::Text winText("Nivel Complet", font, 80);
+                    winText.setOrigin(winText.getLocalBounds().width / 2, winText.getLocalBounds().height / 2);
+                    winText.setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 50);
+                    winText.setFillColor(sf::Color::Green);
+                    window.draw(winText);
+
+                    sf::Text retryText("ENTER: Restart\nESC: Iesire", font, 30);
+                    retryText.setOrigin(retryText.getLocalBounds().width / 2, retryText.getLocalBounds().height / 2);
+                    retryText.setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 + 80);
+                    retryText.setFillColor(sf::Color::White);
+                    window.draw(retryText);
+                    
+                    sf::Text statsPrompt("SPACE: Stats", font, 24);
+                    statsPrompt.setOrigin(statsPrompt.getLocalBounds().width / 2, statsPrompt.getLocalBounds().height / 2);
+                    statsPrompt.setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 50);
+                    statsPrompt.setFillColor(sf::Color(150, 150, 150));
+                    window.draw(statsPrompt);
+                }
+
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
+                     std::vector<std::unique_ptr<Enemy>> emptyEnemies;
+                     game = Game(Army(soldiers, 0), std::move(emptyEnemies));
+                     armyPos.snapTo(posToX(game.getArmy().getPosition()), fieldY);
+                     enemyPositions.clear();
+                     for (const auto& e : game.getEnemies()) {
+                        AnimatedPosition pos;
+                        pos.snapTo(posToX(e->getPos()), fieldY);
+                        enemyPositions[e.get()] = pos;
+                     }
+                     showStats = false;
+                }
+
+            } else if (game.hasLost()) {
+                sf::RectangleShape overlay(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT));
+                overlay.setFillColor(sf::Color::Black);
+                window.draw(overlay);
+
+                sf::Text loseText("Nivel Pierdut", font, 80);
+                loseText.setOrigin(loseText.getLocalBounds().width / 2, loseText.getLocalBounds().height / 2);
+                loseText.setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - 50);
+                loseText.setFillColor(sf::Color::Red);
+                window.draw(loseText);
+
+                sf::Text retryText("ENTER: Restart\nESC: Iesire", font, 30);
+                retryText.setOrigin(retryText.getLocalBounds().width / 2, retryText.getLocalBounds().height / 2);
+                retryText.setPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 + 80);
+                retryText.setFillColor(sf::Color::White);
+                window.draw(retryText);
+
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
+                     soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
+                     std::vector<std::unique_ptr<Enemy>> emptyEnemies;
+                     game = Game(Army(soldiers, 0), std::move(emptyEnemies));
+                     armyPos.snapTo(posToX(game.getArmy().getPosition()), fieldY);
+                     enemyPositions.clear();
+                     for (const auto& e : game.getEnemies()) {
+                        AnimatedPosition pos;
+                        pos.snapTo(posToX(e->getPos()), fieldY);
+                        enemyPositions[e.get()] = pos;
+                     }
+                }
+            }
+
+            window.display();
+        }
+    } catch (const GameException& e) {
+        std::cerr << "Game Error: " << e.what() << std::endl;
+        return 1;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
     }
-    std::cout << "Joc incheiat.\n";
+
     return 0;
 }

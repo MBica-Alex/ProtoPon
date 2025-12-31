@@ -1,0 +1,34 @@
+#pragma once
+#include "Unit.h"
+#include "GameConstants.h"
+#include "GameException.h"
+#include <memory>
+
+class Patapon : public Unit {
+public:
+    enum class Type { SPEAR, SHIELD, BOW };
+
+    Patapon(Type type, std::string name, int max_hp, int atk, int def);
+    Patapon(const Patapon& other);
+    Patapon& operator=(Patapon other);
+    ~Patapon() override = default;
+
+    friend void swap(Patapon& first, Patapon& second) noexcept;
+
+    [[nodiscard]] std::unique_ptr<Unit> clone() const override;
+    [[nodiscard]] int dealDamage() const override;
+    [[nodiscard]] std::string getTypeLabel() const override;
+    void takeDamage(int dmg) override;
+
+    [[nodiscard]] Type getType() const;
+    [[nodiscard]] int getDEF() const;
+
+    static int getTypeRange(Type type);
+
+protected:
+    void renderDetails(std::ostream& os) const override;
+
+private:
+    Type m_type;
+    int m_def;
+};
