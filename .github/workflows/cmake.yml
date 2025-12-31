@@ -90,7 +90,7 @@ jobs:
     # concurrency:
     #   group: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 8
+    timeout-minutes: 60
     permissions:
       attestations: write
       contents: write
@@ -141,7 +141,7 @@ jobs:
             asan_name: "-asan"
             # Link with lld to avoid OOM
             cmake_flags: "-DUSE_ASAN=ON -DCMAKE_EXE_LINKER_FLAGS='-fuse-ld=lld' -DCMAKE_SHARED_LINKER_FLAGS='-fuse-ld=lld' -DCMAKE_MODULE_LINKER_FLAGS='-fuse-ld=lld'"
-            build_flags: "-j 1"
+            build_flags: "-j 4"
 
             # renovate: depName=ubuntu
           - os: ubuntu-22.04
