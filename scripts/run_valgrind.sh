@@ -21,6 +21,7 @@ run_valgrind() {
              --track-origins=yes \
              --error-exitcode=1 \
              ./"${BIN_DIR}"/"${EXECUTABLE_NAME}" || true
+}
 
 if [[ "${RUN_INTERACTIVE}" = true ]]; then
     run_valgrind
