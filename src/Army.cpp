@@ -55,7 +55,7 @@ void Army::attackEnemies(std::vector<std::unique_ptr<Enemy>>& enemies, std::vect
         for (const auto& p : m_soldiers) {
             if (!p->isAlive()) continue;
             
-            if (auto* patapon = dynamic_cast<Patapon*>(p.get())) {
+            if (const auto* patapon = dynamic_cast<Patapon*>(p.get())) {
                 int r = Patapon::getTypeRange(patapon->getType());
                 if (dist <= r) dmg += p->dealDamage();
             }
@@ -74,6 +74,7 @@ void Army::attackEnemies(std::vector<std::unique_ptr<Enemy>>& enemies, std::vect
                     if (p->isAlive()) {
                         int oldPataponHP = p->getHP();
                         p->takeDamage(retaliate);
+                        // cppcheck-suppress duplicateExpression
                         int damageTaken = oldPataponHP - p->getHP();
                         stats.addDamageTaken(damageTaken);
                         log.push_back(e->getName() + " a contraatacat " + p->getName() + " iar acesta a pierdut " + std::to_string(damageTaken) + " HP!");
@@ -119,7 +120,7 @@ int Army::averageDefense() const {
     int sum = 0, count = 0;
     for (const auto& p : m_soldiers) {
         if (p->isAlive()) {
-            if (auto* patapon = dynamic_cast<Patapon*>(p.get())) {
+            if (const auto* patapon = dynamic_cast<Patapon*>(p.get())) {
                 sum += patapon->getDEF();
                 ++count;
             }
