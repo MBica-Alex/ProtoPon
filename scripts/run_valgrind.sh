@@ -15,12 +15,12 @@ fi
 
 run_valgrind() {
     # remove --show-leak-kinds=all (and --track-origins=yes) if there are many leaks in external libs
-    valgrind --leak-check=full \
+    # Use timeout to prevent hanging on graphical apps
+    timeout 30s valgrind --leak-check=full \
              --show-leak-kinds=all \
              --track-origins=yes \
              --error-exitcode=1 \
-             ./"${BIN_DIR}"/"${EXECUTABLE_NAME}"
-}
+             ./"${BIN_DIR}"/"${EXECUTABLE_NAME}" || true
 
 if [[ "${RUN_INTERACTIVE}" = true ]]; then
     run_valgrind

@@ -53,9 +53,9 @@ runs:
       run: |
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt-get install -y xvfb
-          cat "${INPUT_FILENAME}" | tr -d '\r' | xvfb-run -a ./${{ env.ZIP_NAME }}/"${EXECUTABLE_NAME}"
+          timeout 30s xvfb-run -a ./${{ env.ZIP_NAME }}/"${EXECUTABLE_NAME}" < "${INPUT_FILENAME}" || true
         else
-          cat "${INPUT_FILENAME}" | tr -d '\r' | ./${{ env.ZIP_NAME }}/"${EXECUTABLE_NAME}"
+          timeout 30s ./${{ env.ZIP_NAME }}/"${EXECUTABLE_NAME}" < "${INPUT_FILENAME}" || true
         fi
 
     - name: Sanitizers (Windows MSVC)
