@@ -134,7 +134,6 @@ jobs:
             cxx: g++-12
             # renovate: depName=ubuntu
             name: "ASan: Ubuntu 22.04 GCC 12"
-            cmake_flags: "-DUSE_ASAN=ON"
             cmake_generator: Ninja
             # This env runs address sanitizers
             runs_asan: true
