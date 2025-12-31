@@ -90,7 +90,7 @@ void Game::spawnBoss() {
     int spawnPos = m_goal - 5;
     if (spawnPos >= GameConstants::MAP_SIZE) spawnPos = GameConstants::MAP_SIZE - 1;
     
-    m_enemies.push_back(std::make_unique<Boss>("Zigoton General", 30, 1, spawnPos, 2));
+    m_enemies.push_back(std::make_unique<Boss>("Zigoton General", 50, 2, spawnPos, 3));
     m_bossSpawned = true;
     m_log.emplace_back("GENERALUL ZIGOTON A APARUT!");
 }

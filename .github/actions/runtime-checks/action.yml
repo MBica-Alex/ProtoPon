@@ -48,8 +48,8 @@ runs:
       # run one sanitizer for each env to avoid building extra binaries on one env
       if: (matrix.runs_asan == true || matrix.runs_msan == true) && runner.os != 'Windows'
       # detect_leaks is not supported on macOS
-      # env:
-      #   ASAN_OPTIONS: detect_leaks=1
+      env:
+        LD_LIBRARY_PATH: ${{ github.workspace }}/${{ env.ZIP_NAME }}/lib
       run: |
         cat "${INPUT_FILENAME}" | tr -d '\r' | ./${{ env.ZIP_NAME }}/"${EXECUTABLE_NAME}"
 
@@ -64,5 +64,7 @@ runs:
     - name: Valgrind
       shell: bash
       if: runner.os == 'Linux' && matrix.runs_valgrind == true
+      env:
+        LD_LIBRARY_PATH: ${{ github.workspace }}/${{ env.ZIP_NAME }}/lib
       run: |
         bash ./scripts/run_valgrind.sh "${{ env.ZIP_NAME }}"
