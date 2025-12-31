@@ -51,7 +51,12 @@ runs:
       env:
         LD_LIBRARY_PATH: ${{ github.workspace }}/${{ env.ZIP_NAME }}/lib
       run: |
-        cat "${INPUT_FILENAME}" | tr -d '\r' | ./${{ env.ZIP_NAME }}/"${EXECUTABLE_NAME}"
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get install -y xvfb
+          cat "${INPUT_FILENAME}" | tr -d '\r' | xvfb-run -a ./${{ env.ZIP_NAME }}/"${EXECUTABLE_NAME}"
+        else
+          cat "${INPUT_FILENAME}" | tr -d '\r' | ./${{ env.ZIP_NAME }}/"${EXECUTABLE_NAME}"
+        fi
 
     - name: Sanitizers (Windows MSVC)
       shell: bash
@@ -67,4 +72,5 @@ runs:
       env:
         LD_LIBRARY_PATH: ${{ github.workspace }}/${{ env.ZIP_NAME }}/lib
       run: |
-        bash ./scripts/run_valgrind.sh "${{ env.ZIP_NAME }}"
+        sudo apt-get install -y xvfb
+        xvfb-run -a bash ./scripts/run_valgrind.sh "${{ env.ZIP_NAME }}"
