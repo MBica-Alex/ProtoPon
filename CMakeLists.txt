@@ -20,27 +20,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 include(cmake/CopyHelper.cmake)
-include(cmake/Options.cmake)
-
-###############################################################################
-# Set global sanitizer flags BEFORE FetchContent so SFML inherits them
-
-if(USE_ASAN)
-    if(MSVC)
-        add_compile_options(/fsanitize=address)
-    else()
-        add_compile_options(-fsanitize=address,undefined)
-        add_link_options(-fsanitize=address,undefined)
-    endif()
-endif()
-
-if(USE_MSAN)
-    if(NOT MSVC AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        # MSan requires consistent stdlib - force libstdc++ for SFML compatibility
-        add_compile_options(-fsanitize=memory,undefined -fsanitize-recover=memory,undefined -fsanitize-memory-track-origins)
-        add_link_options(-fsanitize=memory,undefined -fsanitize-recover=memory,undefined -fsanitize-memory-track-origins)
-    endif()
-endif()
 
 ###############################################################################
 
@@ -56,6 +35,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(sfml)
 
+include(cmake/Options.cmake)
 include(cmake/CompilerFlags.cmake)
 
 ###############################################################################

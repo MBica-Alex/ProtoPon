@@ -6,7 +6,6 @@
 #include <set>
 #include <optional>
 #include <cstdint>
-#include <algorithm>
 #include "Game.h"
 #include "Boss.h"
 #include "GameException.h"
