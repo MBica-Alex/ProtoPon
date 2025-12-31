@@ -35,8 +35,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(sfml)
 
+
+
 include(cmake/Options.cmake)
 include(cmake/CompilerFlags.cmake)
+
+set_custom_stdlib_and_sanitizers(sfml-system false)
+set_custom_stdlib_and_sanitizers(sfml-window false)
+set_custom_stdlib_and_sanitizers(sfml-graphics false)
 
 ###############################################################################
 
