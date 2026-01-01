@@ -100,4 +100,5 @@ if(APPLE)
     install(FILES launcher.command DESTINATION ${DESTINATION_DIR})
 endif()
 
+copy_files(FILES tastatura.txt TARGET_NAME protopon)
 copy_files(DIRECTORY assets COPY_TO_DESTINATION TARGET_NAME protopon)
