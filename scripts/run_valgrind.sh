@@ -15,12 +15,16 @@ fi
 
 run_valgrind() {
     # remove --show-leak-kinds=all (and --track-origins=yes) if there are many leaks in external libs
-    # Use timeout to prevent hanging on graphical apps
-    timeout 30s valgrind --leak-check=full \
+    valgrind --leak-check=full \
              --show-leak-kinds=all \
              --track-origins=yes \
+             --leak-resolution=med \
+             --vgdb=no \
+             --suppressions=./scripts/valgrind-suppressions.supp \
              --error-exitcode=1 \
-             ./"${BIN_DIR}"/"${EXECUTABLE_NAME}" || true
+             ./"${BIN_DIR}"/"${EXECUTABLE_NAME}" &
+    #          --gen-suppressions=all \
+    bash ./scripts/run_test.sh 25 4 8
 }
 
 if [[ "${RUN_INTERACTIVE}" = true ]]; then
