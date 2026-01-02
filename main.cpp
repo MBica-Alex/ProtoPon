@@ -41,7 +41,7 @@ public:
             progress = 0.0f;
         }
     }
-
+//
     void startSpawn() {
         isSpawning = true;
         spawnTimer = 0.0f;
@@ -64,7 +64,6 @@ public:
             spawnTimer += dt;
             float t = spawnTimer / SPAWN_DURATION;
             if (t >= 1.0f) {
-                t = 1.0f;
                 isSpawning = false;
                 currentScale = 1.0f;
             } else {
@@ -597,16 +596,17 @@ int main() {
                 window.draw(lastLog);
             }
 
-            static float bossEventTimer = 0.0f;
             if (game.isBossEventActive()) {
+                 static float bossEventTimer = 0.0f;
                  bossEventTimer += dt;
                  float fadeDuration = 2.0f;
+                 float halfDuration = fadeDuration * 0.5f;
                  float alpha = 0.0f;
                  
-                 if (bossEventTimer < fadeDuration / 2.0f) {
-                     alpha = bossEventTimer / (fadeDuration / 2.0f);
+                 if (bossEventTimer < halfDuration) {
+                     alpha = bossEventTimer / halfDuration;
                  } else if (bossEventTimer < fadeDuration) {
-                     alpha = (fadeDuration - bossEventTimer) / (fadeDuration / 2.0f);
+                     alpha = (fadeDuration - bossEventTimer) / halfDuration;
                  } else {
                      game.triggerBossSpawn();
                      bossEventTimer = 0.0f;
