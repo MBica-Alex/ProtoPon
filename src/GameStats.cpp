@@ -11,11 +11,3 @@ void GameStats::addDamageTaken(int amount) { damageTaken += amount; }
 void GameStats::addCommand() { commandsCount++; }
 void GameStats::addSteps(int steps) { stepsTaken += steps; }
 void GameStats::addTurn() { turns++; }
-
-
-
-int GameStats::getDamageDealt() const { return damageDealt; }
-int GameStats::getDamageTaken() const { return damageTaken; }
-int GameStats::getCommandsCount() const { return commandsCount; }
-int GameStats::getStepsTaken() const { return stepsTaken; }
-int GameStats::getTurns() const { return turns; }

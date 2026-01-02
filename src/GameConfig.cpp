@@ -1,4 +1,6 @@
 #include "GameConfig.h"
+#include <fstream>
+#include <sstream>
 #include <algorithm>
 #include <cctype>
 
@@ -47,48 +49,4 @@ std::vector<Patapon> GameConfig::loadSoldiers(const std::string& filename) {
     }
 
     return soldiers;
-}
-
-std::vector<std::unique_ptr<Enemy>> GameConfig::loadEnemies(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        throw ResourceLoadException("Failed to open config file: " + filename);
-    }
-
-    std::vector<std::unique_ptr<Enemy>> enemies;
-    std::string line;
-
-    while (std::getline(file, line)) {
-        if (line.empty() || line[0] == '#') continue;
-
-        std::istringstream iss(line);
-        std::string keyword;
-        iss >> keyword;
-
-        if (keyword == "ENEMY") {
-            std::string name;
-            int hp, atk, pos;
-            
-            if (!(iss >> name >> hp >> atk >> pos)) {
-                throw InvalidInputException("Invalid ENEMY format in config");
-            }
-
-            enemies.push_back(std::make_unique<Enemy>(name, hp, atk, pos));
-        } else if (keyword == "BOSS") {
-            std::string name;
-            int hp, atk, pos, bonusDamage;
-            
-            if (!(iss >> name >> hp >> atk >> pos >> bonusDamage)) {
-                throw InvalidInputException("Invalid BOSS format in config");
-            }
-
-            enemies.push_back(std::make_unique<Boss>(name, hp, atk, pos, bonusDamage));
-        }
-    }
-
-    if (enemies.empty()) {
-        throw InvalidStateException("No enemies found in config file");
-    }
-
-    return enemies;
 }

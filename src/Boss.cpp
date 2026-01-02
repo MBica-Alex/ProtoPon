@@ -39,7 +39,7 @@ std::string Boss::getTypeLabel() const {
     return "Boss";
 }
 
-int Boss::getBonusDamage() const { return m_bonusDamage; }
+
 
 void Boss::renderDetails(std::ostream& os) const {
     os << "[BOSS:" << m_name << " HP:" << m_hp << " ATK:" << m_atk 

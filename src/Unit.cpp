@@ -30,9 +30,3 @@ std::ostream& operator<<(std::ostream& os, const Unit& unit) {
     unit.print(os);
     return os;
 }
-
-const std::string& Unit::getName() const { return m_name; }
-int Unit::getHP() const { return m_hp; }
-int Unit::getMaxHP() const { return m_max_hp; }
-int Unit::getATK() const { return m_atk; }
-bool Unit::isAlive() const { return m_hp > 0; }

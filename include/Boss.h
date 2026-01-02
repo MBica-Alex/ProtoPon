@@ -15,8 +15,6 @@ public:
     [[nodiscard]] int dealDamage() const override;
     [[nodiscard]] std::string getTypeLabel() const override;
 
-    [[nodiscard]] int getBonusDamage() const;
-
 protected:
     void renderDetails(std::ostream& os) const override;
 

@@ -18,11 +18,10 @@ public:
     void print(std::ostream& os) const;
     friend std::ostream& operator<<(std::ostream& os, const Unit& unit);
 
-    [[nodiscard]] const std::string& getName() const;
-    [[nodiscard]] int getHP() const;
-    [[nodiscard]] int getMaxHP() const;
-    [[nodiscard]] int getATK() const;
-    [[nodiscard]] bool isAlive() const;
+    [[nodiscard]] const std::string& getName() const { return m_name; }
+    [[nodiscard]] int getHP() const { return m_hp; }
+    [[nodiscard]] int getMaxHP() const { return m_max_hp; }
+    [[nodiscard]] bool isAlive() const { return m_hp > 0; }
 
 protected:
     virtual void renderDetails(std::ostream& os) const = 0;

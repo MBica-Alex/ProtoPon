@@ -72,12 +72,12 @@ void Army::attackEnemies(std::vector<std::unique_ptr<Enemy>>& enemies, std::vect
                 int retaliate = std::max(1, e->dealDamage() - averageDefense());
                 for (const auto& p : m_soldiers) {
                     if (p->isAlive()) {
-                        int oldPataponHP = p->getHP();
+                        int currentHP = p->getHP();
+                        int actualDamage = std::min(currentHP, retaliate);
                         p->takeDamage(retaliate);
-                        // cppcheck-suppress duplicateExpression
-                        int damageTaken = oldPataponHP - p->getHP();
-                        stats.addDamageTaken(damageTaken);
-                        log.push_back(e->getName() + " a contraatacat " + p->getName() + " iar acesta a pierdut " + std::to_string(damageTaken) + " HP!");
+                        
+                        stats.addDamageTaken(actualDamage);
+                        log.push_back(e->getName() + " a contraatacat " + p->getName() + " iar acesta a pierdut " + std::to_string(actualDamage) + " HP!");
                         break;
                     }
                 }
@@ -105,16 +105,8 @@ void Army::receiveEnemyAttack(int dmg, const std::string& enemyName, std::vector
     }
 }
 
-bool Army::hasLivingSoldiers() const {
-    for (const auto& p : m_soldiers) {
-        if (p->isAlive()) return true;
-    }
-    return false;
-}
 
-int Army::getPosition() const { return m_position; }
 
-const std::vector<std::unique_ptr<Unit>>& Army::getSoldiers() const { return m_soldiers; }
 
 int Army::averageDefense() const {
     int sum = 0, count = 0;

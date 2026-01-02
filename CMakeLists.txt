@@ -18,87 +18,107 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-
+include(cmake/Options.cmake)
+include(cmake/CompilerFlags.cmake)
 include(cmake/CopyHelper.cmake)
 
 ###############################################################################
 
+# external dependencies with FetchContent
+
 include(FetchContent)
 
 set(FETCHCONTENT_QUIET OFF)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
+set(SFML_WARNINGS_AS_ERRORS OFF)
+
+# NOTE: Also update SFML_VERSION env var in .github/workflows/cmake.yml:33
 FetchContent_Declare(
-        sfml
-        GIT_REPOSITORY https://github.com/SFML/SFML.git
-        GIT_TAG 3.0.0
+    SFML
+    GIT_REPOSITORY https://github.com/SFML/SFML.git
+    # renovate: datasource=github-tags depName=SFML/SFML versioning=loose
+    GIT_TAG        3.0.0
+    # renovate: depName=SFML/SFML
+    # GIT_TAG        0fa201c969e48ecc253581c5841ce73f44d42f49 # 3.0.2
+    GIT_SHALLOW    1  # works only with branches or tags, not with arbitrary commit hashes
 )
 
-set(SFML_BUILD_AUDIO OFF)
+set(SFML_BUILD_AUDIO ON)
 set(SFML_BUILD_NETWORK OFF)
 
-FetchContent_MakeAvailable(sfml)
-
-
-
-include(cmake/Options.cmake)
-include(cmake/CompilerFlags.cmake)
-
-set_custom_stdlib_and_sanitizers(sfml-system false)
-set_custom_stdlib_and_sanitizers(sfml-window false)
-set_custom_stdlib_and_sanitizers(sfml-graphics false)
+FetchContent_MakeAvailable(SFML)
 
 ###############################################################################
 
 # external dependencies with find_package
 
-# find_package(Threads REQUIRED)
+find_package(Threads REQUIRED)
+if(APPLE)
+elseif(UNIX)
+    find_package(X11)
+endif()
 
 ###############################################################################
 
-# SFML graphical version
-add_executable(protopon
+# NOTE: update executable name in .github/workflows/cmake.yml:25 when changing name here
+add_executable(${MAIN_EXECUTABLE_NAME}
     main.cpp
+    include/Unit.h
     src/Unit.cpp
+    include/GameStats.h
     src/GameStats.cpp
+    include/Patapon.h
     src/Patapon.cpp
+    include/Enemy.h
     src/Enemy.cpp
+    include/Boss.h
     src/Boss.cpp
+    include/CommandSequence.h
     src/CommandSequence.cpp
+    include/Army.h
     src/Army.cpp
+    include/Game.h
     src/Game.cpp
+    include/GameException.h
     src/GameException.cpp
+    include/GameConfig.h
     src/GameConfig.cpp
+    include/GameConstants.h
 )
 
-target_include_directories(protopon PRIVATE include)
+# NOTE: Add all defined targets (e.g. executables, libraries, etc. )
+# NOTE: RUN_SANITIZERS is optional, if it's not present it will default to true
+set_compiler_flags(RUN_SANITIZERS TRUE TARGET_NAMES ${MAIN_EXECUTABLE_NAME})
+# set_compiler_flags(TARGET_NAMES ${MAIN_EXECUTABLE_NAME} ${FOO} ${BAR})
+# where ${FOO} and ${BAR} represent additional executables or libraries
+# you want to compile with the set compiler flags
 
-set_compiler_flags(RUN_SANITIZERS TRUE TARGET_NAMES protopon)
+###############################################################################
 
-target_link_libraries(protopon
-        SFML::Graphics
-        SFML::Window
-        SFML::System
-)
+# use SYSTEM so cppcheck and clang-tidy do not report warnings from these directories
+# target_include_directories(${MAIN_EXECUTABLE_NAME} SYSTEM PRIVATE ext/<SomeHppLib>/include)
+target_include_directories(${MAIN_EXECUTABLE_NAME} SYSTEM PRIVATE ${SFML_SOURCE_DIR}/include)
+# AirBooking doesn't need explicit src include if using relative paths, but we add headers for convenience
+target_include_directories(${MAIN_EXECUTABLE_NAME} PRIVATE include)
 
-# Copy SFML DLLs to executable directory on Windows
-if(WIN32)
-    add_custom_command(TARGET protopon POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:SFML::Graphics>
-            $<TARGET_FILE:SFML::Window>
-            $<TARGET_FILE:SFML::System>
-            $<TARGET_FILE_DIR:protopon>
-    )
+target_link_directories(${MAIN_EXECUTABLE_NAME} PRIVATE ${SFML_BINARY_DIR}/lib)
+target_link_libraries(${MAIN_EXECUTABLE_NAME} PRIVATE SFML::Graphics SFML::Window SFML::Audio SFML::System Threads::Threads)
+
+if(APPLE)
+elseif(UNIX)
+    target_link_libraries(${MAIN_EXECUTABLE_NAME} PRIVATE X11)
 endif()
 
 ###############################################################################
 
 # copy binaries to "bin" folder; these are uploaded as artifacts on each release
 # DESTINATION_DIR is set as "bin" in cmake/Options.cmake:6
-install(TARGETS protopon DESTINATION ${DESTINATION_DIR})
+install(TARGETS ${MAIN_EXECUTABLE_NAME} DESTINATION ${DESTINATION_DIR})
 if(APPLE)
     install(FILES launcher.command DESTINATION ${DESTINATION_DIR})
 endif()
 
-copy_files(FILES tastatura.txt TARGET_NAME protopon)
-copy_files(DIRECTORY assets COPY_TO_DESTINATION TARGET_NAME protopon)
+
+copy_files(FILES tastatura.txt COPY_TO_DESTINATION TARGET_NAME ${MAIN_EXECUTABLE_NAME})
+copy_files(DIRECTORY assets COPY_TO_DESTINATION TARGET_NAME ${MAIN_EXECUTABLE_NAME})

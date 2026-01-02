@@ -14,11 +14,11 @@ public:
 
 
 
-    [[nodiscard]] int getDamageDealt() const;
-    [[nodiscard]] int getDamageTaken() const;
-    [[nodiscard]] int getCommandsCount() const;
-    [[nodiscard]] int getStepsTaken() const;
-    [[nodiscard]] int getTurns() const;
+    [[nodiscard]] int getDamageDealt() const { return damageDealt; }
+    [[nodiscard]] int getDamageTaken() const { return damageTaken; }
+    [[nodiscard]] int getCommandsCount() const { return commandsCount; }
+    [[nodiscard]] int getStepsTaken() const { return stepsTaken; }
+    [[nodiscard]] int getTurns() const { return turns; }
 
 private:
     int damageDealt;

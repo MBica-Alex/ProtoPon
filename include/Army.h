@@ -20,9 +20,14 @@ public:
     void moveForward(int steps = 1);
     void attackEnemies(std::vector<std::unique_ptr<Enemy>>& enemies, std::vector<std::string>& log, GameStats& stats) const;
     void receiveEnemyAttack(int dmg, const std::string& enemyName, std::vector<std::string>& log, GameStats& stats);
-    [[nodiscard]] bool hasLivingSoldiers() const;
-    [[nodiscard]] int getPosition() const;
-    [[nodiscard]] const std::vector<std::unique_ptr<Unit>>& getSoldiers() const;
+    [[nodiscard]] bool hasLivingSoldiers() const {
+        for (const auto& p : m_soldiers) {
+            if (p->isAlive()) return true;
+        }
+        return false;
+    }
+    [[nodiscard]] int getPosition() const { return m_position; }
+    [[nodiscard]] const std::vector<std::unique_ptr<Unit>>& getSoldiers() const { return m_soldiers; }
 
     friend std::ostream& operator<<(std::ostream& os, const Army& a);
 

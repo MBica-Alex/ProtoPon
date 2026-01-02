@@ -13,18 +13,24 @@ class Game {
 public:
     Game(const Army& army, std::vector<std::unique_ptr<Enemy>> enemies);
 
-    void processInput(const std::string& input);
+    void processInput(const std::string& input) {
+        if (m_won || m_lost || m_bossEventActive) return;
+        // Basic filtering for valid commands
+        if (input != "pa" && input != "po") return;
+        m_commands.push(input);
+        update();
+    }
     void update();
     void render(std::ostream& os) const;
 
-    [[nodiscard]] bool hasWon() const;
-    [[nodiscard]] bool hasLost() const;
-    [[nodiscard]] const Army& getArmy() const;
-    [[nodiscard]] const std::vector<std::unique_ptr<Enemy>>& getEnemies() const;
-    [[nodiscard]] const CommandSequence& getCommands() const;
-    [[nodiscard]] const std::vector<std::string>& getLog() const;
-    [[nodiscard]] const GameStats& getStats() const;
-    [[nodiscard]] int getGoal() const;
+    [[nodiscard]] bool hasWon() const { return m_won; }
+    [[nodiscard]] bool hasLost() const { return m_lost; }
+    [[nodiscard]] const Army& getArmy() const { return m_army; }
+    [[nodiscard]] const std::vector<std::unique_ptr<Enemy>>& getEnemies() const { return m_enemies; }
+    [[nodiscard]] const CommandSequence& getCommands() const { return m_commands; }
+    [[nodiscard]] const std::vector<std::string>& getLog() const { return m_log; }
+    [[nodiscard]] const GameStats& getStats() const { return m_stats; }
+    [[nodiscard]] int getGoal() const { return m_goal; }
 
     friend std::ostream& operator<<(std::ostream& os, const Game& g);
 
@@ -50,8 +56,14 @@ private:
 public:
     [[nodiscard]] bool isBossEventActive() const { return m_bossEventActive; }
     [[nodiscard]] bool isVictoryMarching() const { return m_victoryMarchActive; }
-    void triggerBossSpawn();
-    void finishVictoryMarch();
+    void triggerBossSpawn() {
+        m_bossEventActive = false;
+        spawnBoss();
+    }
+    void finishVictoryMarch() {
+        m_victoryMarchActive = false;
+        m_won = true;
+    }
 
     bool pollAttackTriggered() {
         bool temp = m_attackTriggered;
@@ -66,7 +78,9 @@ private:
     bool m_bossEventActive = false;
     bool m_victoryMarchActive = false;
     
-    bool m_bossDefeated() const;
+    bool m_bossDefeated() const {
+        return m_bossSpawned && m_enemies.empty();
+    }
 
 private:
     bool m_attackTriggered = false;

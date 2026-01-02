@@ -10,12 +10,7 @@ Game::Game(const Army& army, std::vector<std::unique_ptr<Enemy>> enemies)
     m_goal = GameConstants::MAP_SIZE - 1;
 }
 
-void Game::processInput(const std::string& input) {
-    if (m_won || m_lost || m_bossEventActive) return;
-    if (input != "pa" && input != "po") return;
-    m_commands.push(input);
-    update();
-}
+
 
 void Game::update() {
     if (m_won || m_lost || m_bossEventActive || m_victoryMarchActive) return;
@@ -62,14 +57,7 @@ void Game::update() {
     }
 }
 
-void Game::finishVictoryMarch() {
-    m_victoryMarchActive = false;
-    m_won = true;
-}
 
-bool Game::m_bossDefeated() const {
-    return m_bossSpawned && m_enemies.empty();
-}
 
 void Game::spawnBeast() {
     int spawnPos = m_goal - 5;
@@ -80,10 +68,7 @@ void Game::spawnBeast() {
     m_log.emplace_back("A APARUT O BESTIE!");
 }
 
-void Game::triggerBossSpawn() {
-    m_bossEventActive = false;
-    spawnBoss();
-}
+
 
 void Game::spawnBoss() {
     if (m_bossSpawned) return;
@@ -142,14 +127,8 @@ void Game::render(std::ostream& os) const {
 
 }
 
-bool Game::hasWon() const { return m_won; }
-bool Game::hasLost() const { return m_lost; }
-const Army& Game::getArmy() const { return m_army; }
-const std::vector<std::unique_ptr<Enemy>>& Game::getEnemies() const { return m_enemies; }
-const CommandSequence& Game::getCommands() const { return m_commands; }
-const std::vector<std::string>& Game::getLog() const { return m_log; }
-const GameStats& Game::getStats() const { return m_stats; }
-int Game::getGoal() const { return m_goal; }
+
+
 
 void Game::handleMove() {
     bool allEnemiesDead = true;
