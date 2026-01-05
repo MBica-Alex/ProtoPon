@@ -381,7 +381,7 @@ int main() {
 
             for (const auto& e : game.getEnemies()) {
                 if (!e->isAlive()) continue;
-                AnimatedPosition& pos = enemyPositions[e.get()];
+                const AnimatedPosition& pos = enemyPositions[e.get()];
                 
                 sf::CircleShape circle;
                 if (dynamic_cast<Boss*>(e.get())) {
