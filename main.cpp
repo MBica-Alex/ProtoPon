@@ -22,16 +22,7 @@ float lerp(float start, float end, float t) {
 
 class AnimatedPosition {
 public:
-    float currentX = 0;
-    float currentY = 0;
-    float targetX = 0;
-    float targetY = 0;
-    float progress = 1.0f;
     static constexpr float ANIMATION_SPEED = 3.0f;
-
-    bool isSpawning = false;
-    float spawnTimer = 0.0f;
-    float currentScale = 1.0f;
     static constexpr float SPAWN_DURATION = 0.6f;
 
     void setTarget(float x, float y) {
@@ -41,7 +32,7 @@ public:
             progress = 0.0f;
         }
     }
-//
+
     void startSpawn() {
         isSpawning = true;
         spawnTimer = 0.0f;
@@ -79,17 +70,25 @@ public:
         currentY = targetY = y;
         progress = 1.0f;
     }
+
+    [[nodiscard]] float getCurrentX() const { return currentX; }
+    [[nodiscard]] float getCurrentY() const { return currentY; }
+    [[nodiscard]] float getCurrentScale() const { return currentScale; }
+
+private:
+    float currentX = 0;
+    float currentY = 0;
+    float targetX = 0;
+    float targetY = 0;
+    float progress = 1.0f;
+
+    bool isSpawning = false;
+    float spawnTimer = 0.0f;
+    float currentScale = 1.0f;
 };
 
 class ArrowAnimation {
 public:
-    float startX, startY;
-    float currentX, currentY;
-    float targetX;
-    float timer = 0.0f;
-    bool active = false;
-    const float DURATION = 0.6f; 
-
     void start(float sX, float sY, float tX) {
         startX = sX;
         startY = sY;
@@ -112,6 +111,18 @@ public:
         float ease = t * t * t; 
         currentX = startX + (targetX - startX) * ease;
     }
+
+    [[nodiscard]] bool isActive() const { return active; }
+    [[nodiscard]] float getCurrentX() const { return currentX; }
+    [[nodiscard]] float getCurrentY() const { return currentY; }
+
+private:
+    float startX = 0, startY = 0;
+    float currentX = 0, currentY = 0;
+    float targetX = 0;
+    float timer = 0.0f;
+    bool active = false;
+    const float DURATION = 0.6f; 
 };
 
 int main() {
@@ -283,8 +294,8 @@ int main() {
             }
 
             if (game.pollAttackTriggered()) {
-                 float sX = armyPos.currentX;
-                 float sY = armyPos.currentY; 
+                 float sX = armyPos.getCurrentX();
+                 float sY = armyPos.getCurrentY(); 
                  float tileWidth = fieldWidth / (GameConstants::MAP_SIZE - 1);
                  float tX = sX + 3.0f * tileWidth;
                  arrowAnim.start(sX, sY, tX);
@@ -449,18 +460,18 @@ int main() {
                     float r = unitRadius * 1.5f;
                     circle.setRadius(r);
                     circle.setOrigin({r, r});
-                    circle.setScale({pos.currentScale, pos.currentScale});
+                    circle.setScale({pos.getCurrentScale(), pos.getCurrentScale()});
                     circle.setFillColor(sf::Color::Black);
                     circle.setOutlineColor(sf::Color::Red);
                 } else {
                     float r = unitRadius;
                     circle.setRadius(r);
                     circle.setOrigin({r, r});
-                    circle.setScale({pos.currentScale, pos.currentScale});
+                    circle.setScale({pos.getCurrentScale(), pos.getCurrentScale()});
                     circle.setFillColor(sf::Color(255, 80, 80));
                     circle.setOutlineColor(sf::Color(150, 30, 30));
                 }
-                circle.setPosition({pos.currentX, pos.currentY});
+                circle.setPosition({pos.getCurrentX(), pos.getCurrentY()});
 
                 if (dynamic_cast<Boss*>(e.get())) {
                     circle.setOutlineThickness(4);
@@ -472,7 +483,7 @@ int main() {
                 bool isBoss = (dynamic_cast<Boss*>(e.get()) != nullptr);
                 sf::Text typeLabel(font, isBoss ? "Z" : "E", 24);
                 typeLabel.setOrigin({typeLabel.getLocalBounds().size.x / 2, typeLabel.getLocalBounds().size.y / 2 + 5});
-                typeLabel.setPosition({pos.currentX, pos.currentY});
+                typeLabel.setPosition({pos.getCurrentX(), pos.getCurrentY()});
                 if (isBoss) {
                      typeLabel.setFillColor(sf::Color::Red);
                 } else {
@@ -486,7 +497,7 @@ int main() {
                     if (count > 1) {
                         sf::Text countLabel(font, std::to_string(count), 24);
                         countLabel.setOrigin({countLabel.getLocalBounds().size.x / 2, countLabel.getLocalBounds().size.y / 2});
-                        countLabel.setPosition({pos.currentX, pos.currentY - unitRadius - 30.0f}); 
+                        countLabel.setPosition({pos.getCurrentX(), pos.getCurrentY() - unitRadius - 30.0f}); 
                         countLabel.setFillColor(sf::Color::White);
                         window.draw(countLabel);
                     }
@@ -497,7 +508,7 @@ int main() {
 
             sf::CircleShape armyCircle(unitRadius);
             armyCircle.setOrigin({unitRadius, unitRadius});
-            armyCircle.setPosition({armyPos.currentX, armyPos.currentY});
+            armyCircle.setPosition({armyPos.getCurrentX(), armyPos.getCurrentY()});
             armyCircle.setFillColor(sf::Color(80, 150, 255));
             armyCircle.setOutlineColor(sf::Color(40, 80, 180));
             armyCircle.setOutlineThickness(4);
@@ -505,7 +516,7 @@ int main() {
 
             sf::Text armyTypeLabel(font, "A", 24);
             armyTypeLabel.setOrigin({armyTypeLabel.getLocalBounds().size.x / 2, armyTypeLabel.getLocalBounds().size.y / 2 + 5});
-            armyTypeLabel.setPosition({armyPos.currentX, armyPos.currentY});
+            armyTypeLabel.setPosition({armyPos.getCurrentX(), armyPos.getCurrentY()});
             armyTypeLabel.setFillColor(sf::Color::White);
             window.draw(armyTypeLabel);
 
@@ -516,7 +527,7 @@ int main() {
 
             sf::Text armyCountLabel(font, std::to_string(livingSoldiers), 24);
             armyCountLabel.setOrigin({armyCountLabel.getLocalBounds().size.x / 2, armyCountLabel.getLocalBounds().size.y / 2});
-            armyCountLabel.setPosition({armyPos.currentX, armyPos.currentY - unitRadius - 30.0f});
+            armyCountLabel.setPosition({armyPos.getCurrentX(), armyPos.getCurrentY() - unitRadius - 30.0f});
             armyCountLabel.setFillColor(sf::Color::White);
             window.draw(armyCountLabel);
 
@@ -546,8 +557,8 @@ int main() {
                 window.draw(ponSprite);
             }
 
-            if (arrowAnim.active) {
-                arrowSprite.setPosition({arrowAnim.currentX, arrowAnim.currentY});
+            if (arrowAnim.isActive()) {
+                arrowSprite.setPosition({arrowAnim.getCurrentX(), arrowAnim.getCurrentY()});
                 arrowSprite.setScale({0.25f, 0.25f}); 
                 window.draw(arrowSprite);
             }
