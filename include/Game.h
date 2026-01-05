@@ -15,7 +15,6 @@ public:
 
     void processInput(const std::string& input) {
         if (m_won || m_lost || m_bossEventActive) return;
-        // Basic filtering for valid commands
         if (input != "pa" && input != "po") return;
         m_commands.push(input);
         update();

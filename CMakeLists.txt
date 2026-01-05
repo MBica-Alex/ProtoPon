@@ -84,6 +84,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
     src/GameException.cpp
     include/GameConfig.h
     src/GameConfig.cpp
+    include/AnimatedPosition.h
+    src/AnimatedPosition.cpp
     include/GameConstants.h
 )
 
