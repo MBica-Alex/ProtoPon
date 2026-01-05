@@ -3,13 +3,13 @@
  Un joc inspirat de seria "Patapon" pentru PSP. In acest joc, tu controlezi o armata formata din creaturi numite "Patapon" care fiecare poate avea o arma diferita. Armata este controlata printr-o serie de comenzi alcatuite din 4 "lovituri de toba", care dau ordine armatei sa actioneze in diverse moduri: sa se miste in fata, sa atace, sa se apere, etc. Pe terenul de joc exista inamici care vor incerca sa-ti omoare armata, iar tu trebuie sa ii omori pentru a ajunge la finalul nivelului si pentru a castiga jocul. In armata poti avea 3 tipuri de Patapon: sulita, scut, sau arc. Sulita poate ataca la distante medii, scutul la distante mici, iar arcul la distante mari. Jocul se termina atunci cand toata armata ta moare sau cand atingi steagul de la final.
 
 ### Resurse:
-**Font:** https://www.fontspace.com/patapon-font-f19009
-**Pata and Pon drum beats:** https://patapon.fandom.com/wiki/Patapon_Drums
-**Yaripon icon:** https://patafour.fandom.com/wiki/Yaripon
-**Tatepon icon:** https://pataponcentral.wordpress.com/the-patapons/
-**Yumipon icon:** https://patapon.fandom.com/wiki/Yumipon
-**Game icon:** https://www.steamgriddb.com/icon/27899
-**Arrow (probably placeholder for now):** https://www.flaticon.com/free-icon/right-arrow_141988
+* **Font:** https://www.fontspace.com/patapon-font-f19009 
+* **Pata and Pon drum beats:** https://patapon.fandom.com/wiki/Patapon_Drums 
+* **Yaripon icon:** https://patafour.fandom.com/wiki/Yaripon 
+* **Tatepon icon:** https://pataponcentral.wordpress.com/the-patapons/ 
+* **Yumipon icon:** https://patapon.fandom.com/wiki/Yumipon
+* **Game icon:** https://www.steamgriddb.com/icon/27899
+* **Arrow (probably placeholder for now):** https://www.flaticon.com/free-icon/right-arrow_141988
  
 ---
 | Laborant  | Link template                                |
