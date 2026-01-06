@@ -70,6 +70,12 @@ add_executable(${MAIN_EXECUTABLE_NAME}
     src/GameStats.cpp
     include/Patapon.h
     src/Patapon.cpp
+    include/Yaripon.h
+    src/Yaripon.cpp
+    include/Tatepon.h
+    src/Tatepon.cpp
+    include/Yumipon.h
+    src/Yumipon.cpp
     include/Enemy.h
     src/Enemy.cpp
     include/Boss.h

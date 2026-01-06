@@ -9,11 +9,15 @@ public:
 
 
     [[nodiscard]] std::unique_ptr<Unit> clone() const override;
+    
+    [[nodiscard]] bool isBoss() const override;
+    [[nodiscard]] std::string getDeathMessage() const override;
+
     [[nodiscard]] int dealDamage() const override;
 
 
 protected:
-
+    void doPrintInfo() const override;
 
 private:
     int m_bonusDamage;

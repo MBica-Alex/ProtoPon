@@ -132,11 +132,9 @@ void Game::handleAttack() {
 void Game::cleanupDeadEnemies() {
     std::erase_if(m_enemies, [this](const std::unique_ptr<Enemy>& e) { 
         if (!e->isAlive()) {
-             if (dynamic_cast<Boss*>(e.get())) {
-                 m_log.emplace_back("GENERALUL ZIGOTON A FOST INVINS!");
-             } else {
+             m_log.emplace_back(e->getDeathMessage());
+             if (!e->isBoss()) {
                  m_beastsDefeated++;
-                 m_log.emplace_back("BESTIA INVINSA!");
              }
              return true;
         }

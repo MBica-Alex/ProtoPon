@@ -15,7 +15,9 @@ public:
 
     virtual void takeDamage(int dmg);
 
-
+    void printInfo() const {
+        doPrintInfo();
+    }
 
     [[nodiscard]] const std::string& getName() const { return m_name; }
     [[nodiscard]] int getHP() const { return m_hp; }
@@ -23,7 +25,7 @@ public:
     [[nodiscard]] bool isAlive() const { return m_hp > 0; }
 
 protected:
-
+    virtual void doPrintInfo() const = 0;
 
     std::string m_name;
     int m_hp;

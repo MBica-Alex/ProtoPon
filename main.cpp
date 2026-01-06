@@ -120,7 +120,7 @@ int main() {
         
         ArrowAnimation arrowAnim;
 
-        std::vector<Patapon> soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
+        std::vector<std::unique_ptr<Patapon>> soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
         Army army(soldiers, 0);
 
         std::vector<std::unique_ptr<Enemy>> initialEnemies;
@@ -659,6 +659,7 @@ int main() {
                 window.draw(retryText);
 
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter)) {
+                     // Reload clean state
                      soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
                      std::vector<std::unique_ptr<Enemy>> emptyEnemies;
                      game = Game(Army(soldiers, 0), std::move(emptyEnemies));

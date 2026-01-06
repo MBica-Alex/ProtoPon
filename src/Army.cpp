@@ -3,14 +3,19 @@
 #include "GameException.h"
 #include <algorithm>
 
-Army::Army(const std::vector<Patapon>& soldiers, int position)
+Army::Army(const std::vector<std::unique_ptr<Patapon>>& soldiers, int position)
     : m_position(position) {
     if (soldiers.empty()) {
         throw InvalidInputException("Army must have at least one soldier");
     }
     m_soldiers.reserve(soldiers.size());
     for (const auto& s : soldiers) {
-        m_soldiers.push_back(s.clone());
+        if (s) {
+             auto clonedUnit = s->clone();
+             if (auto clonedPatapon = std::unique_ptr<Patapon>(dynamic_cast<Patapon*>(clonedUnit.release()))) {
+                 m_soldiers.push_back(std::move(clonedPatapon));
+             }
+        }
     }
 }
 
@@ -18,7 +23,10 @@ Army::Army(const Army& other)
     : m_position(other.m_position) {
     m_soldiers.reserve(other.m_soldiers.size());
     for (const auto& p : other.m_soldiers) {
-        m_soldiers.push_back(p->clone());
+         auto clonedUnit = p->clone();
+         if (auto clonedPatapon = std::unique_ptr<Patapon>(dynamic_cast<Patapon*>(clonedUnit.release()))) {
+             m_soldiers.push_back(std::move(clonedPatapon));
+         }
     }
 }
 
@@ -55,10 +63,8 @@ void Army::attackEnemies(std::vector<std::unique_ptr<Enemy>>& enemies, std::vect
         for (const auto& p : m_soldiers) {
             if (!p->isAlive()) continue;
             
-            if (const auto* patapon = dynamic_cast<Patapon*>(p.get())) {
-                int r = Patapon::getTypeRange(patapon->getType());
-                if (dist <= r) dmg += p->dealDamage();
-            }
+            int r = p->getRange(); 
+            if (dist <= r) dmg += p->dealDamage();
         }
         
         if (dmg > 0) {
@@ -112,10 +118,8 @@ int Army::averageDefense() const {
     int sum = 0, count = 0;
     for (const auto& p : m_soldiers) {
         if (p->isAlive()) {
-            if (const auto* patapon = dynamic_cast<Patapon*>(p.get())) {
-                sum += patapon->getDEF();
-                ++count;
-            }
+            sum += p->getDEF();
+            ++count;
         }
     }
     return count ? (sum / count) : 0;

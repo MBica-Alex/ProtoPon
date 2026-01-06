@@ -4,24 +4,15 @@
 #include <algorithm>
 #include <cctype>
 
-Patapon::Type GameConfig::parseType(const std::string& typeStr) {
-    std::string upper = typeStr;
-    std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
-    
-    if (upper == "SPEAR") return Patapon::Type::SPEAR;
-    if (upper == "SHIELD") return Patapon::Type::SHIELD;
-    if (upper == "BOW") return Patapon::Type::BOW;
-    
-    throw InvalidInputException("Unknown Patapon type: " + typeStr);
-}
 
-std::vector<Patapon> GameConfig::loadSoldiers(const std::string& filename) {
+
+std::vector<std::unique_ptr<Patapon>> GameConfig::loadSoldiers(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
         throw ResourceLoadException("Failed to open config file: " + filename);
     }
 
-    std::vector<Patapon> soldiers;
+    std::vector<std::unique_ptr<Patapon>> soldiers;
     std::string line;
 
     while (std::getline(file, line)) {
@@ -38,9 +29,19 @@ std::vector<Patapon> GameConfig::loadSoldiers(const std::string& filename) {
             if (!(iss >> typeStr >> name >> hp >> atk >> def)) {
                 throw InvalidInputException("Invalid SOLDIER format in config");
             }
+            
+            std::string upper = typeStr;
+            std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
 
-            Patapon::Type type = parseType(typeStr);
-            soldiers.emplace_back(type, name, hp, atk, def);
+            if (upper == "SPEAR") {
+                 soldiers.push_back(std::make_unique<Yaripon>(name, hp, atk, def));
+            } else if (upper == "SHIELD") {
+                 soldiers.push_back(std::make_unique<Tatepon>(name, hp, atk, def));
+            } else if (upper == "BOW") {
+                 soldiers.push_back(std::make_unique<Yumipon>(name, hp, atk, def));
+            } else {
+                 throw InvalidInputException("Unknown Patapon type: " + typeStr);
+            }
         }
     }
 

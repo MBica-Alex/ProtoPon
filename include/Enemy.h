@@ -14,7 +14,14 @@ public:
 
 
     [[nodiscard]] int getPos() const;
+
     void setPos(int p);
+
+    [[nodiscard]] virtual bool isBoss() const;
+    [[nodiscard]] virtual std::string getDeathMessage() const;
+
+protected:
+    void doPrintInfo() const override;
 
 protected:
 

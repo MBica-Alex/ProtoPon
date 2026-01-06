@@ -19,6 +19,17 @@ int Boss::dealDamage() const {
     return std::max(1, m_atk) + m_bonusDamage;
 }
 
+void Boss::doPrintInfo() const {
+}
+
+bool Boss::isBoss() const {
+    return true;
+}
+
+std::string Boss::getDeathMessage() const {
+    return "GENERALUL ZIGOTON A FOST INVINS!";
+}
+
 
 
 

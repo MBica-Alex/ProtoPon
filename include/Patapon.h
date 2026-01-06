@@ -6,26 +6,20 @@
 
 class Patapon : public Unit {
 public:
-    enum class Type { SPEAR, SHIELD, BOW };
-
-    Patapon(Type type, std::string name, int max_hp, int atk, int def);
+    Patapon(std::string name, int max_hp, int atk, int def);
     ~Patapon() override = default;
 
-
-    [[nodiscard]] std::unique_ptr<Unit> clone() const override;
-    [[nodiscard]] int dealDamage() const override;
+    [[nodiscard]] std::unique_ptr<Unit> clone() const override = 0;
+    [[nodiscard]] int dealDamage() const override { return m_atk; }
 
     void takeDamage(int dmg) override;
 
-    [[nodiscard]] Type getType() const;
-    [[nodiscard]] int getDEF() const;
-
-    static int getTypeRange(Type type);
+    [[nodiscard]] virtual int getRange() const = 0;
+    [[nodiscard]] int getDEF() const { return m_def; }
+    
+protected:
+    void doPrintInfo() const override;
 
 protected:
-
-
-private:
-    Type m_type;
     int m_def;
 };

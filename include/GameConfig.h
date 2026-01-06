@@ -3,14 +3,12 @@
 #include <vector>
 #include <memory>
 #include "Patapon.h"
-#include "Enemy.h"
-#include "Boss.h"
+#include "Yaripon.h"
+#include "Tatepon.h"
+#include "Yumipon.h"
 #include "GameException.h"
 
 class GameConfig {
 public:
-    static std::vector<Patapon> loadSoldiers(const std::string& filename);
-
-private:
-    static Patapon::Type parseType(const std::string& typeStr);
+    static std::vector<std::unique_ptr<Patapon>> loadSoldiers(const std::string& filename);
 };

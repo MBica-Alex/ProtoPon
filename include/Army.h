@@ -10,7 +10,7 @@
 
 class Army {
 public:
-    explicit Army(const std::vector<Patapon>& soldiers, int position = 0);
+    explicit Army(const std::vector<std::unique_ptr<Patapon>>& soldiers, int position = 0);
     Army(const Army& other);
     Army& operator=(Army other);
     ~Army() = default;
@@ -27,12 +27,12 @@ public:
         return false;
     }
     [[nodiscard]] int getPosition() const { return m_position; }
-    [[nodiscard]] const std::vector<std::unique_ptr<Unit>>& getSoldiers() const { return m_soldiers; }
+    [[nodiscard]] const std::vector<std::unique_ptr<Patapon>>& getSoldiers() const { return m_soldiers; }
 
 
 
 private:
-    std::vector<std::unique_ptr<Unit>> m_soldiers;
+    std::vector<std::unique_ptr<Patapon>> m_soldiers;
     int m_position;
 
     [[nodiscard]] int averageDefense() const;
