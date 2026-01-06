@@ -23,6 +23,7 @@ void Patapon::takeDamage(int dmg) {
 }
 
 void Patapon::doPrintInfo() const {
+     std::printf("Patapon [Name=%s, HP=%d/%d, ATK=%d, DEF=%d]\n", m_name.c_str(), m_hp, m_max_hp, m_atk, m_def);
 }
 
 

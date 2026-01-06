@@ -121,6 +121,11 @@ int main() {
         ArrowAnimation arrowAnim;
 
         std::vector<std::unique_ptr<Patapon>> soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
+        
+        for(const auto& s : soldiers) {
+            s->printInfo();
+        }
+
         Army army(soldiers, 0);
 
         std::vector<std::unique_ptr<Enemy>> initialEnemies;
