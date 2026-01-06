@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <iostream>
+
 
 class CommandSequence {
 public:
@@ -14,7 +14,7 @@ public:
     void clear();
     [[nodiscard]] const std::vector<std::string>& getCommands() const;
 
-    friend std::ostream& operator<<(std::ostream &os, const CommandSequence &cs);
+
 
 private:
     std::vector<std::string> m_seq;

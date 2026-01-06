@@ -80,52 +80,7 @@ void Game::spawnBoss() {
     m_log.emplace_back("GENERALUL ZIGOTON A APARUT!");
 }
 
-void Game::render(std::ostream& os) const {
-    os << "Inamici:\n";
-    for (const auto& e : m_enemies) os << "  " << *e << "\n";
-    os << "\nArmata:\n  " << m_army << "\n";
-    os << "\nComenzi:";
-    for (const auto& c : m_commands.getCommands()) os << " " << c;
-    os << "\n";
 
-    if (!m_log.empty()) {
-        os << "\n--- Log Batalie ---\n";
-        for (const auto& message : m_log) {
-            os << ">>> " << message << "\n";
-        }
-        os << "------------------\n";
-    }
-
-    os << "\n=== Camp ===\n";
-    for (int pos = 0; pos < GameConstants::MAP_SIZE; ++pos) {
-        if (pos == m_army.getPosition()) {
-            os << "A";
-            continue;
-        }
-        if (pos == m_goal) {
-            os << "G";
-            continue;
-        }
-        int count = 0;
-        char c = 'E';
-        for (const auto& e : m_enemies) {
-            if (!e->isAlive()) continue;
-            if (e->getPos() == pos) {
-                ++count;
-                if (count == 1 && !e->getName().empty())
-                    c = static_cast<char>(std::toupper(static_cast<unsigned char>(e->getName()[0])));
-            }
-        }
-        if (count == 0) os << ".";
-        else if (count == 1) os << c;
-        else if (count < 10) os << static_cast<char>('0' + count);
-        else os << "M";
-    }
-    os << "\n";
-    os << "---------------------------\n";
-
-
-}
 
 
 
@@ -221,7 +176,4 @@ void Game::enemiesAdvance() {
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const Game& g) {
-    g.render(os);
-    return os;
-}
+

@@ -9,11 +9,8 @@ public:
     enum class Type { SPEAR, SHIELD, BOW };
 
     Patapon(Type type, std::string name, int max_hp, int atk, int def);
-    Patapon(const Patapon& other);
-    Patapon& operator=(Patapon other);
     ~Patapon() override = default;
 
-    friend void swap(Patapon& first, Patapon& second) noexcept;
 
     [[nodiscard]] std::unique_ptr<Unit> clone() const override;
     [[nodiscard]] int dealDamage() const override;
@@ -26,7 +23,7 @@ public:
     static int getTypeRange(Type type);
 
 protected:
-    void renderDetails(std::ostream& os) const override;
+
 
 private:
     Type m_type;

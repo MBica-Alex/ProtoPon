@@ -121,14 +121,4 @@ int Army::averageDefense() const {
     return count ? (sum / count) : 0;
 }
 
-std::ostream& operator<<(std::ostream& os, const Army& a) {
-    os << "Pozitia armatei: " << a.m_position << "\n {";
-    bool first = true;
-    for (const auto& p : a.m_soldiers) {
-        if (!first) os << " | ";
-        os << *p;
-        first = false;
-    }
-    os << "}";
-    return os;
-}
+

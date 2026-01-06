@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <iostream>
+
 #include "Army.h"
 #include "Enemy.h"
 #include "CommandSequence.h"
@@ -13,14 +13,14 @@ class Game {
 public:
     Game(const Army& army, std::vector<std::unique_ptr<Enemy>> enemies);
 
-    void processInput(const std::string& input) {
+    void submitCommand(const std::string& input) {
         if (m_won || m_lost || m_bossEventActive) return;
         if (input != "pa" && input != "po") return;
         m_commands.push(input);
         update();
     }
     void update();
-    void render(std::ostream& os) const;
+
 
     [[nodiscard]] bool hasWon() const { return m_won; }
     [[nodiscard]] bool hasLost() const { return m_lost; }
@@ -31,7 +31,7 @@ public:
     [[nodiscard]] const GameStats& getStats() const { return m_stats; }
     [[nodiscard]] int getGoal() const { return m_goal; }
 
-    friend std::ostream& operator<<(std::ostream& os, const Game& g);
+
 
 private:
     Army m_army;

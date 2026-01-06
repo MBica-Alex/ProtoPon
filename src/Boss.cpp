@@ -9,23 +9,7 @@ Boss::Boss(std::string name, int hp, int atk, int pos, int bonusDamage)
     }
 }
 
-Boss::Boss(const Boss& other)
-    : Enemy(other), m_bonusDamage(other.m_bonusDamage) {}
 
-Boss& Boss::operator=(Boss other) {
-    swap(*this, other);
-    return *this;
-}
-
-void swap(Boss& first, Boss& second) noexcept {
-    using std::swap;
-    swap(first.m_name, second.m_name);
-    swap(first.m_hp, second.m_hp);
-    swap(first.m_max_hp, second.m_max_hp);
-    swap(first.m_atk, second.m_atk);
-    swap(first.m_pos, second.m_pos);
-    swap(first.m_bonusDamage, second.m_bonusDamage);
-}
 
 std::unique_ptr<Unit> Boss::clone() const {
     return std::make_unique<Boss>(*this);
@@ -41,7 +25,4 @@ std::string Boss::getTypeLabel() const {
 
 
 
-void Boss::renderDetails(std::ostream& os) const {
-    os << "[BOSS:" << m_name << " HP:" << m_hp << " ATK:" << m_atk 
-       << "+" << m_bonusDamage << " POS:" << m_pos << "]";
-}
+

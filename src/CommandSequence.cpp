@@ -30,8 +30,4 @@ bool CommandSequence::endsWithPattern(const std::vector<std::string> &pattern) c
     return true;
 }
 
-std::ostream& operator<<(std::ostream &os, const CommandSequence &cs) {
-    os << "Comenzi:";
-    for (const auto &c : cs.m_seq) os << " " << c;
-    return os;
-}
+

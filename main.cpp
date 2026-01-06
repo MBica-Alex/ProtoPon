@@ -163,11 +163,11 @@ int main() {
                 if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
                     if (!game.isBossEventActive() && !game.isVictoryMarching()) {
                         if (keyPressed->code == sf::Keyboard::Key::A) {
-                            game.processInput("pa");
+                            game.submitCommand("pa");
                             pataAnimActive = true;
                             pataAnimTimer = 0.0f;
                         } else if (keyPressed->code == sf::Keyboard::Key::D) {
-                            game.processInput("po");
+                            game.submitCommand("po");
                             ponAnimActive = true;
                             ponAnimTimer = 0.0f;
                         }

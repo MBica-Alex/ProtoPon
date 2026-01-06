@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <iostream>
+
 #include "Unit.h"
 #include "Patapon.h"
 #include "Enemy.h"
@@ -29,7 +29,7 @@ public:
     [[nodiscard]] int getPosition() const { return m_position; }
     [[nodiscard]] const std::vector<std::unique_ptr<Unit>>& getSoldiers() const { return m_soldiers; }
 
-    friend std::ostream& operator<<(std::ostream& os, const Army& a);
+
 
 private:
     std::vector<std::unique_ptr<Unit>> m_soldiers;

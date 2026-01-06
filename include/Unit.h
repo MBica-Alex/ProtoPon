@@ -1,13 +1,13 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <iostream>
+
 
 class Unit {
 public:
     Unit(std::string name, int hp, int atk);
-    Unit(const Unit& other);
-    Unit& operator=(const Unit& other);
+    Unit(const Unit& other) = default;
+    Unit& operator=(const Unit& other) = default;
     virtual ~Unit() = default;
 
     [[nodiscard]] virtual std::unique_ptr<Unit> clone() const = 0;
@@ -15,8 +15,7 @@ public:
     [[nodiscard]] virtual std::string getTypeLabel() const = 0;
     virtual void takeDamage(int dmg);
 
-    void print(std::ostream& os) const;
-    friend std::ostream& operator<<(std::ostream& os, const Unit& unit);
+
 
     [[nodiscard]] const std::string& getName() const { return m_name; }
     [[nodiscard]] int getHP() const { return m_hp; }
@@ -24,7 +23,7 @@ public:
     [[nodiscard]] bool isAlive() const { return m_hp > 0; }
 
 protected:
-    virtual void renderDetails(std::ostream& os) const = 0;
+
 
     std::string m_name;
     int m_hp;

@@ -1,6 +1,5 @@
 #include "Patapon.h"
 #include <algorithm>
-#include <utility>
 
 Patapon::Patapon(Type type, std::string name, int max_hp, int atk, int def)
     : Unit(std::move(name), max_hp, atk), m_type(type), m_def(def) {
@@ -12,23 +11,7 @@ Patapon::Patapon(Type type, std::string name, int max_hp, int atk, int def)
     }
 }
 
-Patapon::Patapon(const Patapon& other)
-    : Unit(other), m_type(other.m_type), m_def(other.m_def) {}
 
-Patapon& Patapon::operator=(Patapon other) {
-    swap(*this, other);
-    return *this;
-}
-
-void swap(Patapon& first, Patapon& second) noexcept {
-    using std::swap;
-    swap(first.m_name, second.m_name);
-    swap(first.m_hp, second.m_hp);
-    swap(first.m_max_hp, second.m_max_hp);
-    swap(first.m_atk, second.m_atk);
-    swap(first.m_type, second.m_type);
-    swap(first.m_def, second.m_def);
-}
 
 std::unique_ptr<Unit> Patapon::clone() const {
     return std::make_unique<Patapon>(*this);
@@ -75,7 +58,4 @@ int Patapon::getTypeRange(Type type) {
     return 1;
 }
 
-void Patapon::renderDetails(std::ostream& os) const {
-    os << "[" << getTypeLabel() << " HP:" << m_hp << "/" << m_max_hp 
-       << " ATK:" << m_atk << " DEF:" << m_def << "]";
-}
+
