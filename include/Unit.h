@@ -12,7 +12,7 @@ public:
 
     [[nodiscard]] virtual std::unique_ptr<Unit> clone() const = 0;
     [[nodiscard]] virtual int dealDamage() const = 0;
-    [[nodiscard]] virtual std::string getTypeLabel() const = 0;
+
     virtual void takeDamage(int dmg);
 
 

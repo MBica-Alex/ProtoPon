@@ -26,14 +26,7 @@ int Patapon::dealDamage() const {
     return m_atk;
 }
 
-std::string Patapon::getTypeLabel() const {
-    switch (m_type) {
-        case Type::SPEAR:  return GameConstants::LABEL_SPEAR;
-        case Type::SHIELD: return GameConstants::LABEL_SHIELD;
-        case Type::BOW:    return GameConstants::LABEL_BOW;
-    }
-    return GameConstants::LABEL_UNKNOWN;
-}
+
 
 void Patapon::takeDamage(int dmg) {
     if (dmg < 0) {

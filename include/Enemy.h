@@ -11,7 +11,7 @@ public:
 
     [[nodiscard]] std::unique_ptr<Unit> clone() const override;
     [[nodiscard]] int dealDamage() const override;
-    [[nodiscard]] std::string getTypeLabel() const override;
+
 
     [[nodiscard]] int getPos() const;
     void setPos(int p);

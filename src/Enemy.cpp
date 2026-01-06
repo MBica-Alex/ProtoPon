@@ -22,9 +22,7 @@ int Enemy::dealDamage() const {
     return std::max(1, m_atk);
 }
 
-std::string Enemy::getTypeLabel() const {
-    return "Inamic";
-}
+
 
 int Enemy::getPos() const { return m_pos; }
 void Enemy::setPos(int p) { m_pos = p; }

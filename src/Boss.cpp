@@ -19,9 +19,7 @@ int Boss::dealDamage() const {
     return std::max(1, m_atk) + m_bonusDamage;
 }
 
-std::string Boss::getTypeLabel() const {
-    return "Boss";
-}
+
 
 
 
