@@ -441,9 +441,10 @@ void GameApplication::render() {
     for (const auto& e : m_game->getEnemies()) {
         if (!e->isAlive()) continue;
         const AnimatedPosition& pos = m_enemyPositions[e.get()];
+        const Boss* boss = dynamic_cast<const Boss*>(e.get());
         
         sf::CircleShape circle;
-        if (dynamic_cast<Boss*>(e.get())) {
+        if (boss) {
             float r = m_unitRadius * 1.5f;
             circle.setRadius(r);
             circle.setOrigin({r, r});
@@ -460,8 +461,7 @@ void GameApplication::render() {
         }
         circle.setPosition({pos.getCurrentX(), pos.getCurrentY()});
 
-        if (dynamic_cast<Boss*>(e.get())) {
-             Boss* boss = dynamic_cast<Boss*>(e.get());
+        if (boss) {
              if (boss->isCharging()) {
                   float speed = (boss->getChargeTurns() >= 1) ? 20.0f : 10.0f;
                   float pulse = 0.5f + 0.5f * std::sin(m_bossEventTimer * speed);
@@ -471,16 +471,13 @@ void GameApplication::render() {
                   glow.setFillColor(sf::Color(255, 0, 0, 100 * pulse));
                   m_window.draw(glow);
              }
-        }
-
-        if (dynamic_cast<Boss*>(e.get())) {
-            circle.setOutlineThickness(4);
+             circle.setOutlineThickness(4);
         } else {
-            circle.setOutlineThickness(3);
+             circle.setOutlineThickness(3);
         }
         m_window.draw(circle);
 
-        bool isBoss = (dynamic_cast<Boss*>(e.get()) != nullptr);
+        bool isBoss = (boss != nullptr);
         sf::Text typeLabel(m_font, isBoss ? "Z" : "E", 24);
         typeLabel.setOrigin({typeLabel.getLocalBounds().size.x / 2, typeLabel.getLocalBounds().size.y / 2 + 5});
         typeLabel.setPosition({pos.getCurrentX(), pos.getCurrentY()});
