@@ -17,9 +17,10 @@ public:
         if (m_won || m_lost || m_bossEventActive) return;
         if (input != "pa" && input != "po") return;
         m_commands.push(input);
-        update();
+        processTurn();
     }
     void update();
+    void processTurn();
 
 
     [[nodiscard]] bool hasWon() const { return m_won; }

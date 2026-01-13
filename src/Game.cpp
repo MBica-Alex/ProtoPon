@@ -14,17 +14,33 @@ Game::Game(const Army& army, std::vector<std::unique_ptr<Enemy>> enemies)
 
 void Game::update() {
     if (m_won || m_lost || m_bossEventActive || m_victoryMarchActive) return;
-    m_log.clear();
 
     if (m_beastsSpawned < 3) {
         if (m_enemies.empty() && m_army.getPosition() < m_goal - 5) {
-             spawnBeast();
-        } else if (rand() % 100 < 10 && m_enemies.size() < 2) {
              spawnBeast();
         }
     } else if (m_beastsDefeated >= 3 && !m_bossSpawned && !m_bossEventActive) {
         if (m_enemies.empty()) {
             m_bossEventActive = true; 
+        }
+    }
+    
+    cleanupDeadEnemies();
+
+    if (!m_army.hasLivingSoldiers()) {
+        m_lost = true;
+    } else if (m_army.getPosition() >= m_goal && m_bossDefeated() && !m_won && !m_victoryMarchActive) {
+         m_victoryMarchActive = true;
+    }
+}
+
+void Game::processTurn() {
+    if (m_won || m_lost || m_bossEventActive || m_victoryMarchActive) return;
+    m_log.clear();
+
+    if (m_beastsSpawned < 3) {
+        if (rand() % 100 < 10 && m_enemies.size() < 2) {
+             spawnBeast();
         }
     }
 
@@ -49,12 +65,6 @@ void Game::update() {
     }
     
     cleanupDeadEnemies();
-
-    if (!m_army.hasLivingSoldiers()) {
-        m_lost = true;
-    } else if (m_army.getPosition() >= m_goal && m_bossDefeated() && !m_won && !m_victoryMarchActive) {
-         m_victoryMarchActive = true;
-    }
 }
 
 

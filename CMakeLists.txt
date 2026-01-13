@@ -93,6 +93,8 @@ add_executable(${MAIN_EXECUTABLE_NAME}
     include/AnimatedPosition.h
     src/AnimatedPosition.cpp
     include/GameConstants.h
+    include/GameApplication.h
+    src/GameApplication.cpp
 )
 
 # NOTE: Add all defined targets (e.g. executables, libraries, etc. )
