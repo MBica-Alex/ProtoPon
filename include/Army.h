@@ -18,6 +18,7 @@ public:
     friend void swap(Army& first, Army& second) noexcept;
 
     void moveForward(int steps = 1);
+    void moveBackward(int steps);
     void attackEnemies(std::vector<std::unique_ptr<Enemy>>& enemies, std::vector<std::string>& log, GameStats& stats) const;
     void receiveEnemyAttack(int dmg, const std::string& enemyName, std::vector<std::string>& log, GameStats& stats);
     [[nodiscard]] bool hasLivingSoldiers() const {

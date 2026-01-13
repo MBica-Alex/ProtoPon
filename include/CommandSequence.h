@@ -11,6 +11,7 @@ public:
     void push(const std::string &cmd);
     [[nodiscard]] bool matchesMove() const;
     [[nodiscard]] bool matchesAttack() const;
+    [[nodiscard]] bool matchesRetreat() const;
     void clear();
     [[nodiscard]] const std::vector<std::string>& getCommands() const;
 

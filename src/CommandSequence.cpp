@@ -18,6 +18,10 @@ bool CommandSequence::matchesAttack() const {
     return endsWithPattern({ "po", "po", "pa", "po" }); 
 }
 
+bool CommandSequence::matchesRetreat() const {
+    return endsWithPattern({ "po", "pa", "po", "pa" });
+}
+
 void CommandSequence::clear() { m_seq.clear(); }
 
 const std::vector<std::string>& CommandSequence::getCommands() const { return m_seq; }

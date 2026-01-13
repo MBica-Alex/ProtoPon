@@ -47,6 +47,13 @@ void Army::moveForward(int steps) {
     m_position += steps;
 }
 
+void Army::moveBackward(int steps) {
+    if (steps <= 0) return;
+    if (!hasLivingSoldiers()) return;
+    m_position -= steps;
+    if (m_position < 0) m_position = 0;
+}
+
 void Army::attackEnemies(std::vector<std::unique_ptr<Enemy>>& enemies, std::vector<std::string>& log, GameStats& stats) const {
     if (!hasLivingSoldiers()) return;
     

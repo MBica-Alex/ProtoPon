@@ -46,6 +46,7 @@ private:
     int m_goal;
 
     void handleMove();
+    void handleRetreat();
     void handleAttack();
     void cleanupDeadEnemies();
     void enemiesAttack();

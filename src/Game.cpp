@@ -48,6 +48,10 @@ void Game::processTurn() {
         m_stats.addCommand();
         handleMove();
         m_commands.clear();
+    } else if (m_commands.matchesRetreat()) {
+        m_stats.addCommand();
+        handleRetreat();
+        m_commands.clear();
     } else if (m_commands.matchesAttack()) {
         m_stats.addCommand();
         handleAttack();
@@ -131,6 +135,20 @@ void Game::handleMove() {
     m_log.emplace_back("ARMATA A INAINTAT!");
     m_stats.addSteps(moveDistance);
     m_army.moveForward(moveDistance);
+}
+
+void Game::handleRetreat() {
+    int currentPos = m_army.getPosition();
+    int target = currentPos - 1;
+
+    if (target < 0) {
+        m_log.emplace_back("NU POTI MERGE MAI IN SPATE!");
+        return;
+    }
+
+    m_log.emplace_back("ARMATA S-A RETRAS!");
+    m_stats.addSteps(1);
+    m_army.moveBackward(1);
 }
 
 void Game::handleAttack() {

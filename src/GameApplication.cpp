@@ -576,8 +576,13 @@ void GameApplication::render() {
     attackCmd.setFillColor(sf::Color::Red);
     m_window.draw(attackCmd);
 
+    sf::Text retreatCmd(m_font, "Retragere: PON PATA PON PATA", 22);
+    retreatCmd.setPosition({50, BATTLEFIELD_HEIGHT + 100});
+    retreatCmd.setFillColor(sf::Color::Magenta);
+    m_window.draw(retreatCmd);
+
     sf::Text controlsLabel(m_font, "Controale: A = PATA | D = PON | ESC = Iesire", 18);
-    controlsLabel.setPosition({50, BATTLEFIELD_HEIGHT + 110});
+    controlsLabel.setPosition({50, BATTLEFIELD_HEIGHT + 145});
     controlsLabel.setFillColor(sf::Color(150, 150, 150));
     m_window.draw(controlsLabel);
 
