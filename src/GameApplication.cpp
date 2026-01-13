@@ -236,8 +236,29 @@ void GameApplication::update(float dt) {
             float sX = m_armyPos.getCurrentX();
             float sY = m_armyPos.getCurrentY(); 
             float tileWidth = m_fieldWidth / (GameConstants::MAP_SIZE - 1);
-            float tX = sX + 3.0f * tileWidth;
-            m_arrowAnim.start(sX, sY, tX);
+            
+            int currentPos = m_game->getArmy().getPosition();
+            int closestDist = 1000;
+            
+            for (const auto& e : m_game->getEnemies()) {
+                if (!e->isAlive()) continue;
+                int dist = e->getPos() - currentPos;
+                if (dist >= 0 && dist < closestDist) {
+                    closestDist = dist;
+                }
+            }
+
+            int maxRange = 0;
+            for(const auto& s : m_game->getArmy().getSoldiers()) {
+                if(s->isAlive()) {
+                    maxRange = std::max(maxRange, s->getRange());
+                }
+            }
+
+            if (closestDist <= 3 && closestDist <= maxRange) {
+                 float tX = sX + static_cast<float>(closestDist) * tileWidth;
+                 m_arrowAnim.start(sX, sY, tX);
+            }
     }
     m_arrowAnim.update(dt);
 
