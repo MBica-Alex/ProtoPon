@@ -101,14 +101,12 @@ private:
     sf::Texture m_yariponTexture;
     sf::Texture m_tateponTexture;
     sf::Texture m_yumiponTexture;
-    sf::Texture m_arrowTexture;
     
     std::vector<sf::Texture*> m_pataponIcons;
 
 
     sf::Sprite m_pataSprite;
     sf::Sprite m_ponSprite;
-    sf::Sprite m_arrowSprite;
 
 
     float m_pataAnimTimer = 0.0f;

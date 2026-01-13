@@ -12,7 +12,6 @@ GameApplication::GameApplication()
     : m_window(sf::VideoMode({static_cast<unsigned>(WINDOW_WIDTH), static_cast<unsigned>(WINDOW_HEIGHT)}), "PROTOPON"),
       m_pataSprite(m_pataTexture),
       m_ponSprite(m_ponTexture),
-      m_arrowSprite(m_arrowTexture),
       m_state(GameState::MENU),
       m_selectedUnits({UnitType::YUMIPON, UnitType::YARIPON, UnitType::TATEPON})
 {
@@ -34,7 +33,6 @@ GameApplication::GameApplication()
     if (!m_yariponTexture.loadFromFile("assets/yaripon.png")) throw ResourceLoadException("assets/yaripon.png");
     if (!m_tateponTexture.loadFromFile("assets/tatepon.png")) throw ResourceLoadException("assets/tatepon.png");
     if (!m_yumiponTexture.loadFromFile("assets/yumipon.png")) throw ResourceLoadException("assets/yumipon.png");
-    if (!m_arrowTexture.loadFromFile("assets/arrow.png")) throw ResourceLoadException("assets/arrow.png");
 
     m_pataponIcons = {&m_tateponTexture, &m_yariponTexture, &m_yumiponTexture};
 
@@ -45,9 +43,6 @@ GameApplication::GameApplication()
     m_ponSprite.setTexture(m_ponTexture);
     m_ponSprite.setOrigin(sf::Vector2f(m_ponTexture.getSize()) / 2.0f);
     m_ponSprite.setPosition({WINDOW_WIDTH - 80, BATTLEFIELD_HEIGHT / 2});
-
-    m_arrowSprite.setTexture(m_arrowTexture);
-    m_arrowSprite.setOrigin(sf::Vector2f(m_arrowTexture.getSize()) / 2.0f);
 
     std::vector<std::unique_ptr<Patapon>> soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
     std::vector<std::unique_ptr<Enemy>> initialEnemies;
