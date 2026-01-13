@@ -9,7 +9,7 @@
 * **Tatepon icon:** https://pataponcentral.wordpress.com/the-patapons/ 
 * **Yumipon icon:** https://patapon.fandom.com/wiki/Yumipon
 * **Game icon:** https://www.steamgriddb.com/icon/27899
-* **Arrow (probably placeholder for now):** https://www.flaticon.com/free-icon/right-arrow_141988
+* **Drum sounds:** https://www.myinstants.com/en/search/?name=Patapon
 
 ### De implementat:
 * Alegerea soldatilor
