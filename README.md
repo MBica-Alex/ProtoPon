@@ -10,11 +10,6 @@
 * **Yumipon icon:** https://patapon.fandom.com/wiki/Yumipon
 * **Game icon:** https://www.steamgriddb.com/icon/27899
 * **Drum sounds:** https://www.myinstants.com/en/search/?name=Patapon
-
-### De implementat:
-* Alegerea soldatilor
-* Comanda de inapoiere
-* Boss mai complex (charge attack)
  
 ---
 | Laborant  | Link template                                |
