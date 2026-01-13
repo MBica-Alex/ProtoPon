@@ -22,6 +22,3 @@ void Patapon::takeDamage(int dmg) {
     }
 }
 
-
-
-

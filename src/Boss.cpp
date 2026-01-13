@@ -29,8 +29,3 @@ std::string Boss::getDeathMessage() const {
     return "GENERALUL ZIGOTON A FOST INVINS!";
 }
 
-
-
-
-
-

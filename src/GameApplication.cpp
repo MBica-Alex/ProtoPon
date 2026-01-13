@@ -12,6 +12,8 @@ GameApplication::GameApplication()
     : m_window(sf::VideoMode({static_cast<unsigned>(WINDOW_WIDTH), static_cast<unsigned>(WINDOW_HEIGHT)}), "PROTOPON"),
       m_pataSprite(m_pataTexture),
       m_ponSprite(m_ponTexture),
+      m_pataSound(m_pataBuffer),
+      m_ponSound(m_ponBuffer),
       m_state(GameState::MENU),
       m_selectedUnits({UnitType::YUMIPON, UnitType::YARIPON, UnitType::TATEPON})
 {
@@ -34,13 +36,17 @@ GameApplication::GameApplication()
     if (!m_tateponTexture.loadFromFile("assets/tatepon.png")) throw ResourceLoadException("assets/tatepon.png");
     if (!m_yumiponTexture.loadFromFile("assets/yumipon.png")) throw ResourceLoadException("assets/yumipon.png");
 
+    if (!m_pataBuffer.loadFromFile("assets/pata-drum.mp3")) throw ResourceLoadException("assets/pata-drum.mp3");
+    if (!m_ponBuffer.loadFromFile("assets/pon-drum.mp3")) throw ResourceLoadException("assets/pon-drum.mp3");
+
+
     m_pataponIcons = {&m_tateponTexture, &m_yariponTexture, &m_yumiponTexture};
 
-    m_pataSprite.setTexture(m_pataTexture);
+    m_pataSprite.setTexture(m_pataTexture, true);
     m_pataSprite.setOrigin(sf::Vector2f(m_pataTexture.getSize()) / 2.0f);
     m_pataSprite.setPosition({80, BATTLEFIELD_HEIGHT / 2});
 
-    m_ponSprite.setTexture(m_ponTexture);
+    m_ponSprite.setTexture(m_ponTexture, true);
     m_ponSprite.setOrigin(sf::Vector2f(m_ponTexture.getSize()) / 2.0f);
     m_ponSprite.setPosition({WINDOW_WIDTH - 80, BATTLEFIELD_HEIGHT / 2});
 
@@ -66,6 +72,7 @@ void GameApplication::run() {
     sf::Clock clock;
     while (m_window.isOpen()) {
         float dt = clock.restart().asSeconds();
+        if (dt > 0.1f) dt = 0.1f;
         processEvents();
         update(dt);
         render();
@@ -159,10 +166,12 @@ void GameApplication::processEvents() {
                             m_game->submitCommand("pa");
                             m_pataAnimActive = true;
                             m_pataAnimTimer = 0.0f;
+                            m_pataSound.play();
                         } else if (keyPressed->code == sf::Keyboard::Key::D) {
                             m_game->submitCommand("po");
                             m_ponAnimActive = true;
                             m_ponAnimTimer = 0.0f;
+                            m_ponSound.play();
                         }
                     }
                 }

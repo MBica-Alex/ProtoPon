@@ -12,8 +12,6 @@ public:
     void addSteps(int steps);
     void addTurn();
 
-
-
     [[nodiscard]] int getDamageDealt() const { return damageDealt; }
     [[nodiscard]] int getDamageTaken() const { return damageTaken; }
     [[nodiscard]] int getCommandsCount() const { return commandsCount; }

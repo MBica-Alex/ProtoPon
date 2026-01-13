@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <memory>
 #include <vector>
 #include <map>
@@ -108,6 +109,10 @@ private:
     sf::Sprite m_pataSprite;
     sf::Sprite m_ponSprite;
 
+    sf::SoundBuffer m_pataBuffer;
+    sf::SoundBuffer m_ponBuffer;
+    sf::Sound m_pataSound;
+    sf::Sound m_ponSound;
 
     float m_pataAnimTimer = 0.0f;
     bool m_pataAnimActive = false;

@@ -10,8 +10,6 @@ Game::Game(const Army& army, std::vector<std::unique_ptr<Enemy>> enemies)
     m_goal = GameConstants::MAP_SIZE - 1;
 }
 
-
-
 void Game::update() {
     if (m_won || m_lost || m_bossEventActive || m_victoryMarchActive) return;
 
@@ -72,7 +70,6 @@ void Game::processTurn() {
 }
 
 
-
 void Game::spawnBeast() {
     int spawnPos = m_goal - 5;
     if (spawnPos >= GameConstants::MAP_SIZE) spawnPos = GameConstants::MAP_SIZE - 1;
@@ -81,8 +78,6 @@ void Game::spawnBeast() {
     m_beastsSpawned++;
     m_log.emplace_back("A APARUT O BESTIE!");
 }
-
-
 
 void Game::spawnBoss() {
     if (m_bossSpawned) return;
@@ -93,10 +88,6 @@ void Game::spawnBoss() {
     m_bossSpawned = true;
     m_log.emplace_back("GENERALUL ZIGOTON A APARUT!");
 }
-
-
-
-
 
 
 void Game::handleMove() {
