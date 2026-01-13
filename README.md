@@ -10,6 +10,11 @@
 * **Yumipon icon:** https://patapon.fandom.com/wiki/Yumipon
 * **Game icon:** https://www.steamgriddb.com/icon/27899
 * **Arrow (probably placeholder for now):** https://www.flaticon.com/free-icon/right-arrow_141988
+
+### De implementat:
+* Alegerea soldatilor
+* Comanda de inapoiere
+* Boss mai complex (charge attack)
  
 ---
 | Laborant  | Link template                                |
