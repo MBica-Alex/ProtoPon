@@ -15,7 +15,17 @@ public:
 
     [[nodiscard]] int dealDamage() const override;
 
+    [[nodiscard]] bool isCharging() const;
+    void startCharge();
+    void resetCharge();
+    void incrementChargeTurns();
+    [[nodiscard]] int getChargeTurns() const;
+    void incrementAttackCount();
+    [[nodiscard]] int getAttackCount() const;
 
 private:
     int m_bonusDamage;
+    bool m_isCharging;
+    int m_chargeTurns;
+    int m_attackCount;
 };

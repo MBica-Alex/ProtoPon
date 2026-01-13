@@ -163,12 +163,46 @@ void Game::cleanupDeadEnemies() {
 
 void Game::enemiesAttack() {
     const int enemyAttackRange = 1;
+
     for (const auto& e : m_enemies) {
         if (!e->isAlive()) continue;
-        int dist = std::abs(e->getPos() - m_army.getPosition());
-        if (dist <= enemyAttackRange) {
-            int dmg = e->dealDamage();
-            m_army.receiveEnemyAttack(dmg, e->getName(), m_log, m_stats);
+
+        Boss* boss = dynamic_cast<Boss*>(e.get());
+        if (boss) {
+            if (boss->isCharging()) {
+                if (boss->getChargeTurns() >= 1) {
+                    boss->resetCharge();
+                    int dist = std::abs(boss->getPos() - m_army.getPosition());
+                    if (dist <= enemyAttackRange) {
+                         int dmg = boss->dealDamage() * 2; 
+                         m_army.receiveEnemyAttack(dmg, boss->getName(), m_log, m_stats);
+                    } else {
+                         m_log.emplace_back("GENERALUL ZIGOTON A RATAT ATACUL!");
+                    }
+                } else {
+                    boss->incrementChargeTurns();
+                    m_log.emplace_back("GENERALUL ZIGOTON ISI ADUNA PUTERILE!");
+                }
+            } else {
+                int dist = std::abs(boss->getPos() - m_army.getPosition());
+                if (dist <= enemyAttackRange) {
+                    if (boss->getAttackCount() % 2 == 1) {
+                         boss->startCharge();
+                         m_log.emplace_back("GENERALUL ZIGOTON PREGATESTE UN ATAC PUTERNIC!");
+                         boss->incrementAttackCount();
+                    } else {
+                         int dmg = boss->dealDamage();
+                         m_army.receiveEnemyAttack(dmg, boss->getName(), m_log, m_stats);
+                         boss->incrementAttackCount();
+                    }
+                }
+            }
+        } else {
+            int dist = std::abs(e->getPos() - m_army.getPosition());
+            if (dist <= enemyAttackRange) {
+                int dmg = e->dealDamage();
+                m_army.receiveEnemyAttack(dmg, e->getName(), m_log, m_stats);
+            }
         }
     }
 }

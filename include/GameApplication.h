@@ -137,12 +137,8 @@ private:
 
 
     float m_victoryTimer = 0.0f;
-
-
     bool m_showStats = false;
     bool m_spaceKeyProcessed = false;
-
-
     float m_bossEventTimer = 0.0f;
     float m_bossEventAlpha = 0.0f;
 

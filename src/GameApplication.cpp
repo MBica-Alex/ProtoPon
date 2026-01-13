@@ -461,6 +461,19 @@ void GameApplication::render() {
         circle.setPosition({pos.getCurrentX(), pos.getCurrentY()});
 
         if (dynamic_cast<Boss*>(e.get())) {
+             Boss* boss = dynamic_cast<Boss*>(e.get());
+             if (boss->isCharging()) {
+                  float speed = (boss->getChargeTurns() >= 1) ? 20.0f : 10.0f;
+                  float pulse = 0.5f + 0.5f * std::sin(m_bossEventTimer * speed);
+                  sf::CircleShape glow(m_unitRadius * 2.0f);
+                  glow.setOrigin({m_unitRadius * 2.0f, m_unitRadius * 2.0f});
+                  glow.setPosition({pos.getCurrentX(), pos.getCurrentY()});
+                  glow.setFillColor(sf::Color(255, 0, 0, 100 * pulse));
+                  m_window.draw(glow);
+             }
+        }
+
+        if (dynamic_cast<Boss*>(e.get())) {
             circle.setOutlineThickness(4);
         } else {
             circle.setOutlineThickness(3);
