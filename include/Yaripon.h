@@ -8,6 +8,4 @@ public:
     [[nodiscard]] std::unique_ptr<Unit> clone() const override;
     [[nodiscard]] int getRange() const override;
     
-protected:
-    void doPrintInfo() const override;
 };

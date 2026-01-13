@@ -9,6 +9,4 @@ public:
     [[nodiscard]] int getRange() const override;
     [[nodiscard]] int dealDamage() const override;
     
-protected:
-    void doPrintInfo() const override;
 };

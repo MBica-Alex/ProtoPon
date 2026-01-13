@@ -27,8 +27,7 @@ int Enemy::dealDamage() const {
 int Enemy::getPos() const { return m_pos; }
 void Enemy::setPos(int p) { m_pos = p; }
 
-void Enemy::doPrintInfo() const {
-}
+
 
 bool Enemy::isBoss() const {
     return false;

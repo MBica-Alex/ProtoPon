@@ -21,9 +21,6 @@ public:
     [[nodiscard]] virtual std::string getDeathMessage() const;
 
 protected:
-    void doPrintInfo() const override;
-
-protected:
 
     int m_pos;
 };

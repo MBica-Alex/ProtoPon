@@ -113,7 +113,7 @@ private:
 
 
     const float m_fieldLeft = 50.0f;
-    const float m_fieldRight = 1150.0f;
+
     const float m_fieldWidth = 1100.0f;
     const float m_unitRadius = 35.0f;
     const float m_fieldY = 600.0f - 35.0f + 10.0f;

@@ -16,9 +16,6 @@ public:
 
     [[nodiscard]] virtual int getRange() const = 0;
     [[nodiscard]] int getDEF() const { return m_def; }
-    
-protected:
-    void doPrintInfo() const override;
 
 protected:
     int m_def;

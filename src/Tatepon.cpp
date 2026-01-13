@@ -17,7 +17,4 @@ int Tatepon::dealDamage() const {
     return std::max(0, m_atk - 1);
 }
 
-void Tatepon::doPrintInfo() const {
-    std::cout << "Tatepon [Name=" << m_name << ", HP=" << m_hp << "/" << m_max_hp 
-              << ", ATK=" << m_atk << ", DEF=" << m_def << "]" << std::endl;
-}
+
