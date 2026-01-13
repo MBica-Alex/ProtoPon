@@ -20,6 +20,7 @@ public:
     [[nodiscard]] const std::string& getName() const { return m_name; }
     [[nodiscard]] int getHP() const { return m_hp; }
     [[nodiscard]] int getMaxHP() const { return m_max_hp; }
+    [[nodiscard]] int getATK() const { return m_atk; }
     [[nodiscard]] bool isAlive() const { return m_hp > 0; }
 
 protected:

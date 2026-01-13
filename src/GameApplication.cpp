@@ -12,7 +12,9 @@ GameApplication::GameApplication()
     : m_window(sf::VideoMode({static_cast<unsigned>(WINDOW_WIDTH), static_cast<unsigned>(WINDOW_HEIGHT)}), "PROTOPON"),
       m_pataSprite(m_pataTexture),
       m_ponSprite(m_ponTexture),
-      m_arrowSprite(m_arrowTexture)
+      m_arrowSprite(m_arrowTexture),
+      m_state(GameState::MENU),
+      m_selectedUnits({UnitType::YUMIPON, UnitType::YARIPON, UnitType::TATEPON})
 {
     m_window.setFramerateLimit(60);
 
@@ -80,57 +82,93 @@ void GameApplication::processEvents() {
         if (event->is<sf::Event::Closed>()) {
             m_window.close();
         }
-        
+
         if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-            if (m_game->hasWon()) {
-                if (keyPressed->code == sf::Keyboard::Key::Space) {
-                    if (!m_spaceKeyProcessed) {
-                        m_showStats = !m_showStats;
-                        m_spaceKeyProcessed = true;
+            if (m_state == GameState::MENU) {
+                if (keyPressed->code == sf::Keyboard::Key::Left) {
+                    m_menuSelectionIndex = (m_menuSelectionIndex - 1 + 3) % 3;
+                } else if (keyPressed->code == sf::Keyboard::Key::Right) {
+                    m_menuSelectionIndex = (m_menuSelectionIndex + 1) % 3;
+                } else if (keyPressed->code == sf::Keyboard::Key::Up) {
+                    int currentType = static_cast<int>(m_selectedUnits[m_menuSelectionIndex]);
+                    m_selectedUnits[m_menuSelectionIndex] = static_cast<UnitType>((currentType + 1) % 3);
+                } else if (keyPressed->code == sf::Keyboard::Key::Down) {
+                    int currentType = static_cast<int>(m_selectedUnits[m_menuSelectionIndex]);
+                    m_selectedUnits[m_menuSelectionIndex] = static_cast<UnitType>((currentType - 1 + 3) % 3);
+                } else if (keyPressed->code == sf::Keyboard::Key::Enter) {
+                    std::vector<std::unique_ptr<Patapon>> soldiersConfigFile = GameConfig::loadSoldiers("assets/game_config.txt");
+                    
+                    std::map<UnitType, const Patapon*> templates;
+                    for(const auto& s : soldiersConfigFile) {
+                        if (dynamic_cast<Yaripon*>(s.get())) templates[UnitType::YARIPON] = s.get();
+                        else if (dynamic_cast<Tatepon*>(s.get())) templates[UnitType::TATEPON] = s.get();
+                        else if (dynamic_cast<Yumipon*>(s.get())) templates[UnitType::YUMIPON] = s.get();
                     }
+
+                    std::vector<std::unique_ptr<Patapon>> newSoldiers;
+
+                    auto createFromTemplate = [&](UnitType type) -> std::unique_ptr<Patapon> {
+                         const Patapon* tpl = templates[type];
+                         if(type == UnitType::YARIPON) return std::make_unique<Yaripon>(tpl->getName(), tpl->getMaxHP(), tpl->getATK(), tpl->getDEF());
+                         if(type == UnitType::TATEPON) return std::make_unique<Tatepon>(tpl->getName(), tpl->getMaxHP(), tpl->getATK(), tpl->getDEF());
+                         if(type == UnitType::YUMIPON) return std::make_unique<Yumipon>(tpl->getName(), tpl->getMaxHP(), tpl->getATK(), tpl->getDEF());
+                         return nullptr;
+                    };
+
+                    newSoldiers.push_back(createFromTemplate(m_selectedUnits[2]));
+                    newSoldiers.push_back(createFromTemplate(m_selectedUnits[1]));
+                    newSoldiers.push_back(createFromTemplate(m_selectedUnits[0]));
+
+                    m_pataponIcons.clear();
+                    for(const auto& s : newSoldiers) {
+                         if(dynamic_cast<Yaripon*>(s.get())) m_pataponIcons.push_back(&m_yariponTexture);
+                         else if(dynamic_cast<Tatepon*>(s.get())) m_pataponIcons.push_back(&m_tateponTexture);
+                         else if(dynamic_cast<Yumipon*>(s.get())) m_pataponIcons.push_back(&m_yumiponTexture);
+                    }
+
+                    std::vector<std::unique_ptr<Enemy>> initialEnemies;
+                    m_game = std::make_unique<Game>(Army(std::move(newSoldiers), 0), std::move(initialEnemies));
+                    
+                    m_armyPos = AnimatedPosition();
+                    m_armyPos.snapTo(posToX(m_game->getArmy().getPosition()), m_fieldY);
+                    m_enemyPositions.clear();
+                    
+                    m_state = GameState::GAME;
                 }
-                     if (keyPressed->code == sf::Keyboard::Key::Enter) {
-                     std::vector<std::unique_ptr<Patapon>> soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
-                     std::vector<std::unique_ptr<Enemy>> emptyEnemies;
-                     m_game = std::make_unique<Game>(Army(std::move(soldiers), 0), std::move(emptyEnemies));
-                     m_armyPos.snapTo(posToX(m_game->getArmy().getPosition()), m_fieldY);
-                     m_enemyPositions.clear();
-                     for (const auto& e : m_game->getEnemies()) {
-                        AnimatedPosition pos;
-                        pos.snapTo(posToX(e->getPos()), m_fieldY);
-                        m_enemyPositions[e.get()] = pos;
-                     }
-                     m_showStats = false;
-                     m_victoryTimer = 0.0f;
-                     m_bossEventTimer = 0.0f;
-                     m_bossEventAlpha = 0.0f;
-                }
-            } else if (m_game->hasLost()) {
-                if (keyPressed->code == sf::Keyboard::Key::Enter) {
-                     std::vector<std::unique_ptr<Patapon>> soldiers = GameConfig::loadSoldiers("assets/game_config.txt");
-                     std::vector<std::unique_ptr<Enemy>> emptyEnemies;
-                     m_game = std::make_unique<Game>(Army(std::move(soldiers), 0), std::move(emptyEnemies));
-                     m_armyPos.snapTo(posToX(m_game->getArmy().getPosition()), m_fieldY);
-                     m_enemyPositions.clear();
-                     for (const auto& e : m_game->getEnemies()) {
-                        AnimatedPosition pos;
-                        pos.snapTo(posToX(e->getPos()), m_fieldY);
-                        m_enemyPositions[e.get()] = pos;
-                     }
-                     m_victoryTimer = 0.0f;
-                     m_bossEventTimer = 0.0f;
-                     m_bossEventAlpha = 0.0f;
-                }
-            } else {
-                if (!m_game->isBossEventActive() && !m_game->isVictoryMarching()) {
-                    if (keyPressed->code == sf::Keyboard::Key::A) {
-                        m_game->submitCommand("pa");
-                        m_pataAnimActive = true;
-                        m_pataAnimTimer = 0.0f;
-                    } else if (keyPressed->code == sf::Keyboard::Key::D) {
-                        m_game->submitCommand("po");
-                        m_ponAnimActive = true;
-                        m_ponAnimTimer = 0.0f;
+            }
+            else if (m_state == GameState::GAME) {
+                if (m_game->hasWon()) {
+                    if (keyPressed->code == sf::Keyboard::Key::Space) {
+                        if (!m_spaceKeyProcessed) {
+                            m_showStats = !m_showStats;
+                            m_spaceKeyProcessed = true;
+                        }
+                    }
+                    if (keyPressed->code == sf::Keyboard::Key::Enter) {
+                        m_state = GameState::MENU;
+                        m_showStats = false;
+                        m_victoryTimer = 0.0f;
+                        m_bossEventTimer = 0.0f;
+                        m_bossEventAlpha = 0.0f;
+                    }
+                } else if (m_game->hasLost()) {
+                    if (keyPressed->code == sf::Keyboard::Key::Enter) {
+                        m_state = GameState::MENU; 
+                        m_victoryTimer = 0.0f;
+                        m_bossEventTimer = 0.0f;
+                        m_bossEventAlpha = 0.0f;
+                    }
+                } else {
+                    if (!m_game->isBossEventActive() && !m_game->isVictoryMarching()) {
+                        if (keyPressed->code == sf::Keyboard::Key::A) {
+                            m_game->submitCommand("pa");
+                            m_pataAnimActive = true;
+                            m_pataAnimTimer = 0.0f;
+                        } else if (keyPressed->code == sf::Keyboard::Key::D) {
+                            m_game->submitCommand("po");
+                            m_ponAnimActive = true;
+                            m_ponAnimTimer = 0.0f;
+                        }
                     }
                 }
             }
@@ -229,6 +267,12 @@ void GameApplication::update(float dt) {
 }
 
 void GameApplication::render() {
+    if (m_state == GameState::MENU) {
+        renderMenu();
+        m_window.display();
+        return;
+    }
+
     m_window.clear(sf::Color(20, 20, 40));
 
     sf::RectangleShape sky(sf::Vector2f(WINDOW_WIDTH, BATTLEFIELD_HEIGHT));
@@ -630,4 +674,74 @@ void GameApplication::renderLoseScreen() {
     retryText.setPosition({WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 + 80});
     retryText.setFillColor(sf::Color::White);
     m_window.draw(retryText);
+}
+
+const sf::Texture& GameApplication::getUnitTexture(UnitType type) const {
+    switch (type) {
+        case UnitType::YARIPON: return m_yariponTexture;
+        case UnitType::TATEPON: return m_tateponTexture;
+        case UnitType::YUMIPON: return m_yumiponTexture;
+        default: return m_yariponTexture;
+    }
+}
+
+void GameApplication::renderMenu() {
+    m_window.clear(sf::Color(10, 10, 20));
+
+    sf::Text title(m_font, "SELECTEAZA ARMATA", 50);
+    title.setOrigin({title.getLocalBounds().size.x / 2, title.getLocalBounds().size.y / 2});
+    title.setPosition({WINDOW_WIDTH / 2, 80});
+    title.setFillColor(sf::Color::White);
+    m_window.draw(title);
+
+    sf::Text instr(m_font, "Sageata STANGA/DREAPTA: Alege Slot\nSageata SUS/JOS: Schimba Unitate\nENTER: Start Lupta", 20);
+    instr.setOrigin({instr.getLocalBounds().size.x / 2, instr.getLocalBounds().size.y / 2});
+    instr.setPosition({WINDOW_WIDTH / 2, 160});
+    instr.setFillColor(sf::Color(150, 150, 150));
+    m_window.draw(instr);
+
+    float startX = WINDOW_WIDTH / 2 - 250;
+    float slotY = WINDOW_HEIGHT / 2;
+    float slotSpacing = 250.0f;
+
+    std::vector<std::string> slotNames = { "SPATE", "MIJLOC", "FATA" };
+    
+    for (int i = 0; i < 3; ++i) {
+        float x = startX + i * slotSpacing;
+        
+        if (m_menuSelectionIndex == i) {
+            sf::RectangleShape highlight(sf::Vector2f(200, 300));
+            highlight.setOrigin({100, 150});
+            highlight.setPosition({x, slotY});
+            highlight.setFillColor(sf::Color(50, 50, 100));
+            highlight.setOutlineColor(sf::Color::Cyan);
+            highlight.setOutlineThickness(3);
+            m_window.draw(highlight);
+        }
+
+        sf::Text slotName(m_font, slotNames[i], 24);
+        slotName.setOrigin({slotName.getLocalBounds().size.x / 2, slotName.getLocalBounds().size.y / 2});
+        slotName.setPosition({x, slotY - 120});
+        m_window.draw(slotName);
+
+        UnitType type = m_selectedUnits[i];
+        sf::Sprite icon(getUnitTexture(type));
+        float targetSize = 100.0f;
+        float scale = targetSize / icon.getLocalBounds().size.x;
+        icon.setScale({scale, scale});
+        icon.setOrigin({icon.getLocalBounds().size.x / 2, icon.getLocalBounds().size.y / 2});
+        icon.setPosition({x, slotY});
+        m_window.draw(icon);
+        
+        std::string unitName = "Unknown";
+        if (type == UnitType::YARIPON) unitName = "YARIPON (Sulita)";
+        else if (type == UnitType::TATEPON) unitName = "TATEPON (Scut)";
+        else if (type == UnitType::YUMIPON) unitName = "YUMIPON (Arc)";
+
+        sf::Text uName(m_font, unitName, 20);
+        uName.setOrigin({uName.getLocalBounds().size.x / 2, uName.getLocalBounds().size.y / 2});
+        uName.setPosition({x, slotY + 100});
+        uName.setFillColor(sf::Color::Yellow);
+        m_window.draw(uName);
+    }
 }

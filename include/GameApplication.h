@@ -6,6 +6,17 @@
 #include "Game.h"
 #include "AnimatedPosition.h"
 
+enum class GameState {
+    MENU,
+    GAME
+};
+
+enum class UnitType {
+    YARIPON,
+    TATEPON,
+    YUMIPON
+};
+
 class ArrowAnimation {
 public:
     void start(float sX, float sY, float tX) {
@@ -66,9 +77,12 @@ private:
     void processEvents();
     void update(float dt);
     void render();
+    void renderMenu();
     void renderStats();
     void renderWinScreen();
     void renderLoseScreen();
+
+    const sf::Texture& getUnitTexture(UnitType type) const;
     
 
     float posToX(int pos) const;
@@ -128,4 +142,8 @@ private:
 
     float m_bossEventTimer = 0.0f;
     float m_bossEventAlpha = 0.0f;
+
+    GameState m_state;
+    std::vector<UnitType> m_selectedUnits;
+    int m_menuSelectionIndex = 0;
 };
